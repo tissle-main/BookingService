@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="BookingService.Data/BookingService.Data.csproj" Id="93ae2372-7fcf-46de-80a2-899fdd2eea46" />
+  <Project Path="BookingService.Web/BookingService.Web.csproj" Id="61a4cfad-1bff-471a-bc8b-66778e37ef3a" />
 </Solution>
