@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="BookingService.AppHost/BookingService.AppHost.csproj" Id="cda9323c-900d-4b91-b905-c511d65ad818" />
   <Project Path="BookingService.Data/BookingService.Data.csproj" Id="93ae2372-7fcf-46de-80a2-899fdd2eea46" />
+  <Project Path="BookingService.ServiceDefaults/BookingService.ServiceDefaults.csproj" />
   <Project Path="BookingService.Web/BookingService.Web.csproj" Id="61a4cfad-1bff-471a-bc8b-66778e37ef3a" />
 </Solution>

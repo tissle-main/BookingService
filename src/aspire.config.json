@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "BookingService.AppHost/BookingService.AppHost.csproj"
+  }
+}

@@ -4,7 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+	<InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>   
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>   
+    <UserSecretsId>80a4f460-afce-480a-95bf-63f574b034eb</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,9 +15,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BookingService.Data\BookingService.Data.csproj" />
+    <ProjectReference Include="..\BookingService.ServiceDefaults\BookingService.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="13.5.3" />
     <PackageReference Include="ErrorOr" Version="2.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="Mediator.Abstractions" Version="3.0.2" />
