@@ -1,20 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using BookingService.Data.Features.Auth.Users;
+using BookingService.Data.Features.Auth.Roles;
 using BookingService.Data.Shared.KeyedEntities;
 using BookingService.Data.Features.Auth.RefreshTokens;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace BookingService.Data;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<UserEntity, RoleEntity, Guid>(options)
 {
     #region Instance
     public DbSet<RefreshTokenEntity> RefreshTokens { get; set; } = null!; //Init by EF Core
     #endregion
 
     #region Base
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        base.OnModelCreating(builder);
+        builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {

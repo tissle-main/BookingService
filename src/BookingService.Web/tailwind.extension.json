@@ -2,8 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/theron-wang/Tailwind-CSS-for-Visual-Studio/refs/heads/main/tailwind.extension.schema.json",
   "BuildFiles": [
     {
-      "Input": "wwwroot\\tailwind.css",
-      "Output": "wwwroot\\app.css",
+      "Input": "..\\..\\..\\PhoenixKC\\src\\PhoenixKC.WebUI\\src\\tailwind.css",
+      "Output": "..\\..\\..\\PhoenixKC\\src\\PhoenixKC.WebUI\\src\\styles.css",
       "Behavior": "Default"
     }
   ],

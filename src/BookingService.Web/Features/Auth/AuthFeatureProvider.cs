@@ -1,0 +1,122 @@
+﻿using System.Text;
+using BookingService.Data;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using BookingService.Data.Features.Auth.Users;
+using BookingService.Data.Features.Auth.Roles;
+using BookingService.Web.Features.Auth.Options;
+using BookingService.Web.Features.Auth.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using BookingService.Web.Features.Auth.Handlers.LoginUser;
+using BookingService.Web.Features.Auth.Handlers.DeleteUser;
+using BookingService.Web.Features.Auth.Handlers.RegisterUser;
+using BookingService.Web.Features.Auth.Handlers.GenerateTokens;
+using BookingService.Web.Features.Auth.Handlers.RefreshAccessToken;
+using BookingService.Web.Features.Auth.Handlers.RemoveExpiredRefreshTokens;
+
+namespace BookingService.Web.Features.Auth;
+
+public sealed class AuthFeatureProvider : FeatureProvider
+{
+    #region Static
+    private static void AddRoles(WebApplication app)
+    {
+        using IServiceScope scope = app.Services.CreateScope();
+        RoleManager<RoleEntity> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<RoleEntity>>();
+        
+        RoleEntity adminRole = new()
+        {
+            Name = AuthRoles.Admin
+        };
+        IdentityResult result = roleManager.CreateAsync(adminRole).GetAwaiter().GetResult();
+        if(!result.Succeeded)
+        {
+            string message = string.Join(", ", result.ToErrors());
+            throw new Exception($"Failed to add admin role to a database: {message}");
+        }
+
+        RoleEntity userRole = new()
+        {
+            Name = AuthRoles.User
+        };
+        result = roleManager.CreateAsync(userRole).GetAwaiter().GetResult();
+        if(!result.Succeeded)
+        {
+            string message = string.Join(", ", result.ToErrors());
+            throw new Exception($"Failed to add user role to a database: {message}");
+        }
+    }
+    private static void AddAdmin(WebApplication app)
+    {
+        using IServiceScope scope = app.Services.CreateScope();
+        UserManager<UserEntity> userManager = scope.ServiceProvider.GetRequiredService<UserManager<UserEntity>>();
+        IOptions<AdminCredentials> adminCredentials = scope.ServiceProvider.GetRequiredService<IOptions<AdminCredentials>>();
+        UserEntity user = new()
+        {
+            Email = adminCredentials.Value.Email,
+            UserName = adminCredentials.Value.Email
+        };
+        IdentityResult result = userManager.CreateAsync(user, adminCredentials.Value.Password).GetAwaiter().GetResult();
+        if(!result.Succeeded)
+        {
+            string message = string.Join(", ", result.ToErrors());
+            throw new Exception($"Failed to add admin to a database: {message}");
+        }
+    }
+    #endregion
+
+    #region Interfaces
+    public override void AddServices(WebApplicationBuilder builder)
+    {
+        builder.Services.AddOptionsWithValidateOnStart<JwtOptions>().BindConfiguration(JwtOptions.SectionName);
+        builder.Services.AddOptionsWithValidateOnStart<RefreshTokenOptions>().BindConfiguration(RefreshTokenOptions.SectionName);
+        builder.Services.AddOptionsWithValidateOnStart<AdminCredentials>().BindConfiguration(AdminCredentials.SectionName);
+
+        IConfigurationSection jwt = builder.Configuration.GetRequiredSection(JwtOptions.SectionName);
+        builder.Services.AddIdentityCore<UserEntity>(options =>
+        {
+            options.User.RequireUniqueEmail = true;
+            options.Password.RequiredLength = AuthConstants.PasswordMinLength;
+            options.Password.RequireNonAlphanumeric = false;
+        }).AddRoles<RoleEntity>().AddSignInManager().AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();      
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+        {
+            string jwtKey = jwt[nameof(JwtOptions.Key)]!;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwt[nameof(JwtOptions.Issuer)],
+                ValidateAudience = true,
+                ValidAudience = jwt[nameof(JwtOptions.Audience)],
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+        builder.Services.AddAuthorization();
+
+        builder.Services.AddScoped<IAccessTokenGenerator, AccessTokenGenerator>();
+        builder.Services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
+    }
+    public override void UseMiddleware(WebApplication app)
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        AddRoles(app);
+        AddAdmin(app);
+
+        app.AddRegisterUserEndpoint();
+        app.AddLoginUserEndpoint();
+        app.AddRefreshAccessTokenEndpoint();
+        app.AddDeleteUserEndpoint();
+        if(app.Environment.IsEnvironment(ProfileNames.Test))
+        {
+            app.AddRemoveExpiredRefreshTokensEndpoint();
+            app.AddGenerateTokensEndpoint();
+        }
+    }
+    #endregion
+}
