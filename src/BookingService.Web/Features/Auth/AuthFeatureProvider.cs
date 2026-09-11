@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using BookingService.Data;
-using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using BookingService.Data.Features.Auth.Users;
@@ -19,54 +18,6 @@ namespace BookingService.Web.Features.Auth;
 
 public sealed class AuthFeatureProvider : FeatureProvider
 {
-    #region Static
-    private static void AddRoles(WebApplication app)
-    {
-        using IServiceScope scope = app.Services.CreateScope();
-        RoleManager<RoleEntity> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<RoleEntity>>();
-        
-        RoleEntity adminRole = new()
-        {
-            Name = AuthRoles.Admin
-        };
-        IdentityResult result = roleManager.CreateAsync(adminRole).GetAwaiter().GetResult();
-        if(!result.Succeeded)
-        {
-            string message = string.Join(", ", result.ToErrors());
-            throw new Exception($"Failed to add admin role to a database: {message}");
-        }
-
-        RoleEntity userRole = new()
-        {
-            Name = AuthRoles.User
-        };
-        result = roleManager.CreateAsync(userRole).GetAwaiter().GetResult();
-        if(!result.Succeeded)
-        {
-            string message = string.Join(", ", result.ToErrors());
-            throw new Exception($"Failed to add user role to a database: {message}");
-        }
-    }
-    private static void AddAdmin(WebApplication app)
-    {
-        using IServiceScope scope = app.Services.CreateScope();
-        UserManager<UserEntity> userManager = scope.ServiceProvider.GetRequiredService<UserManager<UserEntity>>();
-        IOptions<AdminCredentials> adminCredentials = scope.ServiceProvider.GetRequiredService<IOptions<AdminCredentials>>();
-        UserEntity user = new()
-        {
-            Email = adminCredentials.Value.Email,
-            UserName = adminCredentials.Value.Email
-        };
-        IdentityResult result = userManager.CreateAsync(user, adminCredentials.Value.Password).GetAwaiter().GetResult();
-        if(!result.Succeeded)
-        {
-            string message = string.Join(", ", result.ToErrors());
-            throw new Exception($"Failed to add admin to a database: {message}");
-        }
-    }
-    #endregion
-
-    #region Interfaces
     public override void AddServices(WebApplicationBuilder builder)
     {
         builder.Services.AddOptionsWithValidateOnStart<JwtOptions>().BindConfiguration(JwtOptions.SectionName);
@@ -105,9 +56,6 @@ public sealed class AuthFeatureProvider : FeatureProvider
         app.UseAuthentication();
         app.UseAuthorization();
 
-        AddRoles(app);
-        AddAdmin(app);
-
         app.AddRegisterUserEndpoint();
         app.AddLoginUserEndpoint();
         app.AddRefreshAccessTokenEndpoint();
@@ -118,5 +66,4 @@ public sealed class AuthFeatureProvider : FeatureProvider
             app.AddGenerateTokensEndpoint();
         }
     }
-    #endregion
 }

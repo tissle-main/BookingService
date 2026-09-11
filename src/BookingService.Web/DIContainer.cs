@@ -1,10 +1,13 @@
-﻿using FluentValidation;
+﻿using ErrorOr;
+using Mediator;
+using FluentValidation;
 using BookingService.Data;
 using System.Collections.Frozen;
 using BookingService.Web.Features;
 using Microsoft.EntityFrameworkCore;
 using BookingService.Web.Components;
 using BookingService.ServiceDefaults;
+using BookingService.Web.Shared.DbSeeding;
 using BookingService.Web.Shared.Behaviors.Validation;
 using BookingService.Web.Shared.Behaviors.Authorized;
 using BookingService.Web.Shared.Behaviors.DbTransaction;
@@ -70,6 +73,7 @@ public static class DIContainer
         public void UseCore()
         {
             thisApp.MigrateDatabase();
+            thisApp.SeedDatabase();
             thisApp.UseBlazor();
             thisApp.UseFeatures();
         }
@@ -78,6 +82,17 @@ public static class DIContainer
             using IServiceScope scope = thisApp.Services.CreateScope();
             AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             dbContext.Database.Migrate();
+        }
+        public void SeedDatabase()
+        {
+            using IServiceScope scope = thisApp.Services.CreateScope();
+            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            ErrorOr<Unit> errorOrValue = mediator.Send(new DbSeedingCommand(), CancellationToken.None).AsTask().GetAwaiter().GetResult();
+            if(errorOrValue.IsError)
+            {
+                string message = string.Join(", ", errorOrValue.Errors);
+                throw new Exception($"Unexpected error occured while seeding database: {message}");
+            }
         }
         public void UseBlazor()
         {
