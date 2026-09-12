@@ -2,4 +2,4 @@
 
 namespace BookingService.Web.Features.Auth.Handlers.LoginUser;
 
-public sealed record class LoginUserResponse(UserDto User, string AccessToken);
+public sealed record class LoginUserResponse(UserDto User);

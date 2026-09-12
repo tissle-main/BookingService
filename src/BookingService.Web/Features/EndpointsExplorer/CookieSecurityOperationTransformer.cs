@@ -1,11 +1,11 @@
-﻿using Microsoft.OpenApi;
+using Microsoft.OpenApi;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace BookingService.Web.Features.EndpointsExplorer;
 
-public sealed class BearerSecurityOperationTransformer : IOpenApiOperationTransformer
+public sealed class CookieSecurityOperationTransformer : IOpenApiOperationTransformer
 {
     #region Interfaces
     public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
@@ -20,7 +20,7 @@ public sealed class BearerSecurityOperationTransformer : IOpenApiOperationTransf
         operation.Security ??= [];
         operation.Security.Add(new OpenApiSecurityRequirement()
         {
-            [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, context.Document)] = []
+            [new OpenApiSecuritySchemeReference(CookieAuthenticationDefaults.AuthenticationScheme, context.Document)] = []
         });
         return Task.CompletedTask;
     }

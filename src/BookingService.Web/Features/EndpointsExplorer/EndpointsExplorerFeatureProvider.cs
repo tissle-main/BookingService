@@ -12,8 +12,8 @@ public sealed class EndpointsExplorerFeatureProvider : FeatureProvider
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddOpenApi(options =>
             {
-                options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
-                options.AddOperationTransformer<BearerSecurityOperationTransformer>();
+                options.AddDocumentTransformer<CookieSecuritySchemeTransformer>();
+                options.AddOperationTransformer<CookieSecurityOperationTransformer>();
             });
         }
     }

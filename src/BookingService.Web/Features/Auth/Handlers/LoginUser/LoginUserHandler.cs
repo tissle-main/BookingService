@@ -3,17 +3,13 @@ using Mediator;
 using Microsoft.AspNetCore.Identity;
 using BookingService.Data.Features.Auth.Users;
 using BookingService.Web.Features.Auth.Dtos.Users;
-using BookingService.Web.Features.Auth.Extensions;
 using BookingService.Web.Shared.Behaviors.DbTransaction;
-using BookingService.Web.Features.Auth.Handlers.GenerateTokens;
 using LoginResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace BookingService.Web.Features.Auth.Handlers.LoginUser;
 
 public sealed class LoginUserHandler(
-    SignInManager<UserEntity> thisSignInManager,
-    IHttpContextAccessor thisHttpContextAccessor,
-    IMediator thisMediator
+    SignInManager<UserEntity> thisSignInManager
 ) : ICommandHandler<LoginUserCommand, ErrorOr<LoginUserResponse>>
 {
     #region Interfaces
@@ -30,15 +26,8 @@ public sealed class LoginUserHandler(
             return result.ToError();
         }
 
-        ErrorOr<GenerateTokensResponse> errorOrTokens = await thisMediator.Send(new GenerateTokensCommand(user)
-        {
-            BeginDbTransaction = false
-        }, cancellationToken);
-        return errorOrTokens.Then(tokens =>
-        {
-            thisHttpContextAccessor.HttpContext!.AddRefreshToken(tokens.RefreshToken);
-            return new LoginUserResponse(user.ToDto(), tokens.AccessToken);
-        });    
+        await thisSignInManager.SignInAsync(user, isPersistent: false);
+        return new LoginUserResponse(user.ToDto());
     }
     #endregion
 }

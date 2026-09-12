@@ -1,9 +1,7 @@
 ﻿using ErrorOr;
 using Mediator;
-using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using BookingService.Web.Shared.Extensions;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using BookingService.Web.Shared.Behaviors.Authorized;
 
 namespace BookingService.Web.Features.Auth.Handlers.DeleteUser;
@@ -41,11 +39,9 @@ public static class DeleteUserEndpoint
     }
     extension(HttpClient thisHttpClient)
     {
-        public async ValueTask<HttpResponseMessage> SendDeleteUserAsync(string accessToken, CancellationToken cancellationToken)
+        public async ValueTask<HttpResponseMessage> SendDeleteUserAsync(CancellationToken cancellationToken)
         {
-            using HttpRequestMessage request = new(HttpMethod.Delete, Url);
-            request.Headers.Authorization = new AuthenticationHeaderValue(JwtBearerDefaults.AuthenticationScheme, accessToken);
-            return await thisHttpClient.SendAsync(request, cancellationToken);
+            return await thisHttpClient.DeleteAsync(Url, cancellationToken);
         }
     }
 }

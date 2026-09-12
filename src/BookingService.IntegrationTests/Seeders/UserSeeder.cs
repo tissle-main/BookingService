@@ -61,7 +61,7 @@ public static class UserSeeder
     {
         return Faker.PickRandom(await app.AddUsers2Async(cancellationToken, min, max));
     }
-    public static async ValueTask<(UserEntity User, string Password, string AccessToken)> AddUsers2AndLoginRandomAsync(
+    public static async ValueTask<(UserEntity User, string Password)> AddUsers2AndLoginRandomAsync(
         this AppFixture app,
         CancellationToken cancellationToken,
         int min = 2,
@@ -74,6 +74,6 @@ public static class UserSeeder
         response.EnsureSuccessStatusCode();
         LoginUserResponse? result = await response.Content.ReadFromJsonAsync<LoginUserResponse>(cancellationToken);
         await Assert.That(result).IsNotNull();
-        return (user, password, result.AccessToken);
+        return (user, password);
     }
 }

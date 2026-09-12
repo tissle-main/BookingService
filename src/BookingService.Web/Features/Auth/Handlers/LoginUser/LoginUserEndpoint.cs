@@ -3,7 +3,6 @@ using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using BookingService.Web.Shared.Extensions;
 using BookingService.Web.Shared.Behaviors.Validation;
-using BookingService.Web.Features.Auth.Handlers.GenerateTokens;
 
 namespace BookingService.Web.Features.Auth.Handlers.LoginUser;
 
@@ -27,7 +26,6 @@ public static class LoginUserEndpoint
         {
             thisBuilder.ProducesProblem(StatusCodes.Status400BadRequest);
             thisBuilder.ProducesProblem(StatusCodes.Status404NotFound);
-            thisBuilder.AddGenerateTokensProductionProblems();
             return thisBuilder.AddValidationBehaviorProductionProblems();
         }
     }
