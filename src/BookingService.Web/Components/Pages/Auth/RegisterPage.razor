@@ -1,0 +1,20 @@
+@page "/Auth/Register"
+
+<PageTitle>Create account</PageTitle>
+
+<div class="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl ring-1 ring-slate-200">
+        <div class="mb-8 text-center">
+            <p class="text-sm font-semibold uppercase tracking-wide text-indigo-600">BookingService</p>
+            <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Create your account</h1>
+            <p class="mt-2 text-sm text-slate-500">Get started by creating a new account.</p>
+        </div>
+
+        <AuthForm />
+
+        <p class="mt-6 text-center text-sm text-slate-500">
+            Already have an account?
+            <a href="/Auth/Login" class="font-semibold text-indigo-600 hover:text-indigo-700">Sign in</a>
+        </p>
+    </div>
+</div>

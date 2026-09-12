@@ -38,6 +38,7 @@ public static class DIContainer
         public void AddBlazor()
         {
             thisBuilder.Services.AddRazorComponents().AddInteractiveServerComponents();
+            thisBuilder.Services.AddCascadingAuthenticationState();
         }
         public void AddCQRS()
         {

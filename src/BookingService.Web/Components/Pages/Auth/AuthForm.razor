@@ -1,0 +1,117 @@
+@using ErrorOr
+@using Mediator
+@using BookingService.Web.Features.Auth.Handlers.LoginUser
+@using BookingService.Web.Features.Auth.Handlers.RegisterUser
+@inject IMediator Mediator
+@inject IJSRuntime Js
+@inject NavigationManager Navigation
+
+<EditForm Model="model" OnValidSubmit="SubmitAsync" class="space-y-5">
+    <div>
+        <label for="email" class="mb-1 block text-sm font-medium text-slate-700">Email</label>
+        <InputText id="email" @bind-Value="model.Email" type="email" autocomplete="email"
+                   class="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+        <ValidationMessage For="@(() => model.Email)" class="mt-1 block text-sm text-red-600" />
+    </div>
+
+    <div>
+        <label for="password" class="mb-1 block text-sm font-medium text-slate-700">Password</label>
+        <InputText id="password" @bind-Value="model.Password" type="password" autocomplete="@(IsLogin ? "current-password" : "new-password")"
+                   class="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+        <ValidationMessage For="@(() => model.Password)" class="mt-1 block text-sm text-red-600" />
+    </div>
+
+    @if (!IsLogin)
+    {
+        <div>
+            <label for="confirm-password" class="mb-1 block text-sm font-medium text-slate-700">Confirm password</label>
+            <InputText id="confirm-password" @bind-Value="model.ConfirmPassword" type="password" autocomplete="new-password"
+                       class="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+            <ValidationMessage For="@(() => model.ConfirmPassword)" class="mt-1 block text-sm text-red-600" />
+        </div>
+    }
+
+    @if (errors.Count > 0)
+    {
+        <div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            @foreach (string error in errors)
+            {
+                <p>@error</p>
+            }
+        </div>
+    }
+
+    <button type="submit" disabled="@isSubmitting"
+            class="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">
+        @(isSubmitting ? "Working..." : (IsLogin ? "Sign in" : "Create account"))
+    </button>
+</EditForm>
+
+@code {
+    [Parameter] public bool IsLogin { get; set; }
+
+    private readonly AuthFormModel model = new();
+    private readonly List<string> errors = [];
+    private bool isSubmitting;
+
+    private async Task SubmitAsync()
+    {
+        errors.Clear();
+        if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.Password))
+        {
+            errors.Add("Email and password are required.");
+            return;
+        }
+
+        if (!IsLogin && model.Password != model.ConfirmPassword)
+        {
+            errors.Add("Passwords do not match.");
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            if (IsLogin)
+            {
+                AuthBrowserResponse response = await Js.InvokeAsync<AuthBrowserResponse>(
+                    "bookingServiceAuth.login",
+                    new LoginUserCommand(model.Email, model.Password));
+                if (!response.Success)
+                {
+                    errors.Add(response.Message ?? "Unable to sign in.");
+                    return;
+                }
+
+                Navigation.NavigateTo("/", forceLoad: true);
+                return;
+            }
+
+            ErrorOr<Unit> result = await Mediator.Send(new RegisterUserCommand(model.Email, model.Password));
+            if (result.IsError)
+            {
+                errors.AddRange(result.Errors.Select(error => error.Description));
+                return;
+            }
+
+            Navigation.NavigateTo("/Auth/Login");
+        }
+        catch (Exception)
+        {
+            errors.Add("The request could not be completed. Please try again.");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private sealed class AuthFormModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+    private sealed record AuthBrowserResponse(bool Success, string? Message);
+}
