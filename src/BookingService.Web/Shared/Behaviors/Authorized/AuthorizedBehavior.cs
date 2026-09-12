@@ -25,7 +25,17 @@ public sealed class AuthorizedBehavior<TMessage, TErrorOrValue>(
         {
             return FromErrors([Error.Unauthorized()]);
         }
-        if(!await thisUserManager.IsInRoleAsync(user, message.Role))
+        string[] roles = message.Role.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        bool hasRequiredRole = false;
+        foreach(string role in roles)
+        {
+            if(await thisUserManager.IsInRoleAsync(user, role))
+            {
+                hasRequiredRole = true;
+                break;
+            }
+        }
+        if(!hasRequiredRole)
         {
             return FromErrors([Error.Forbidden()]);
         }

@@ -2,11 +2,12 @@
 using Microsoft.AspNetCore.Identity;
 using BookingService.Data.Features.Auth.Users;
 using BookingService.Data.Features.Auth.Roles;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using BookingService.Web.Features.Auth.Options;
 using BookingService.Web.Features.Auth.Handlers.LoginUser;
 using BookingService.Web.Features.Auth.Handlers.DeleteUser;
+using BookingService.Web.Features.Auth.Handlers.LogoutUser;
 using BookingService.Web.Features.Auth.Handlers.RegisterUser;
+using BookingService.Web.Features.Auth.Handlers.CheckLoggedInUser;
 
 namespace BookingService.Web.Features.Auth;
 
@@ -15,20 +16,18 @@ public sealed class AuthFeatureProvider : FeatureProvider
     public override void AddServices(WebApplicationBuilder builder)
     {
         builder.Services.AddOptionsWithValidateOnStart<AdminCredentials>().BindConfiguration(AdminCredentials.SectionName);
-
         builder.Services.AddIdentityCore<UserEntity>(options =>
         {
             options.User.RequireUniqueEmail = true;
             options.Password.RequiredLength = AuthConstants.PasswordMinLength;
             options.Password.RequireNonAlphanumeric = false;
         }).AddRoles<RoleEntity>().AddSignInManager().AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();      
-        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(options =>
-            {
-                options.LoginPath = "/api/auth/login";
-                options.AccessDeniedPath = "/api/auth/login";
-                options.SlidingExpiration = true;
-            });
+        builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme).AddCookie(IdentityConstants.ApplicationScheme, options =>
+        {
+            options.LoginPath = "/Auth/Login";
+            options.AccessDeniedPath = "/Auth/Login";
+            options.SlidingExpiration = true;
+        });
         builder.Services.AddAuthorization();
     }
     public override void UseMiddleware(WebApplication app)
@@ -36,8 +35,13 @@ public sealed class AuthFeatureProvider : FeatureProvider
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.AddRegisterUserEndpoint();
+        if(app.Environment.IsEnvironment(ProfileNames.Test))
+        {
+            app.AddRegisterUserEndpoint();
+            app.AddDeleteUserEndpoint();
+            app.AddCheckLoggedInUserEndpoint();
+        }
         app.AddLoginUserEndpoint();
-        app.AddDeleteUserEndpoint();
+        app.AddLogoutUserEndpoint();
     }
 }

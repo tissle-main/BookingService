@@ -45,5 +45,18 @@ public static class LoginUserEndpoint
         {
             return await thisHttpClient.PostAsJsonAsync(Url, command, cancellationToken);
         }
+        public async ValueTask<(HttpResponseMessage Message, LoginUserResponse? Response)> SendLoginUser2Async(
+            LoginUserCommand command,
+            CancellationToken cancellationToken
+        )
+        {
+            HttpResponseMessage message = await thisHttpClient.SendLoginUserAsync(command, cancellationToken);
+            if(message.IsSuccessStatusCode)
+            {
+                LoginUserResponse? response = await message.Content.ReadFromJsonAsync<LoginUserResponse>(cancellationToken);
+                return (message, response);
+            }
+            return (message, null);
+        }
     } 
 }

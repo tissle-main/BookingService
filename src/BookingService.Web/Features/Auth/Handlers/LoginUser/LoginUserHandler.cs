@@ -3,7 +3,6 @@ using Mediator;
 using Microsoft.AspNetCore.Identity;
 using BookingService.Data.Features.Auth.Users;
 using BookingService.Web.Features.Auth.Dtos.Users;
-using BookingService.Web.Shared.Behaviors.DbTransaction;
 using LoginResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace BookingService.Web.Features.Auth.Handlers.LoginUser;

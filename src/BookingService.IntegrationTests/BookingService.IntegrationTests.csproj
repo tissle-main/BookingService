@@ -18,8 +18,4 @@
     <ProjectReference Include="..\BookingService.Web\BookingService.Web.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Features\" />
-  </ItemGroup>
-
 </Project>
