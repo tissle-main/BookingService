@@ -1,0 +1,320 @@
+﻿@page "/Rooms"
+@attribute [Authorize]
+
+@using ErrorOr
+@using Mediator
+@using BookingService.Web.Features.Auth
+@using BookingService.Web.Features.Bookings.Dtos
+@using BookingService.Web.Features.Bookings.Handlers.GetBookings
+@using BookingService.Web.Features.Rooms.Dtos
+@using BookingService.Web.Features.Rooms.Handlers.CreateRoom
+@using BookingService.Web.Features.Rooms.Handlers.DeleteRooms
+@using BookingService.Web.Features.Rooms.Handlers.GetRooms
+@using BookingService.Web.Features.Rooms.Handlers.UpdateRoom
+@inject IMediator Mediator
+
+<PageTitle>Rooms</PageTitle>
+
+<section class="mx-auto max-w-7xl px-6 py-10">
+    <div class="mb-8">
+        <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Rooms</h1>
+        <p class="mt-2 text-slate-600">Browse available rooms and their scheduled bookings.</p>
+    </div>
+
+    <AuthorizeView Roles="@AuthRoles.Admin">
+        <div class="mb-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-900">Room management</h2>
+                    <p class="mt-1 text-sm text-slate-500">Add, rename, or remove rooms as an administrator.</p>
+                </div>
+                <button type="button" @onclick="ShowAddRoom"
+                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled="@isSubmitting">
+                    Add room
+                </button>
+            </div>
+
+            @if (showAddForm)
+            {
+                <div class="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-end">
+                    <div class="flex-1">
+                        <label for="new-room-name" class="mb-1 block text-sm font-medium text-slate-700">Room name</label>
+                        <InputText id="new-room-name" @bind-Value="newRoomName"
+                                   class="block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                    </div>
+                    <button type="button" @onclick="CreateRoomAsync"
+                            class="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            disabled="@isSubmitting">
+                        Save room
+                    </button>
+                    <button type="button" @onclick="CancelAddRoom"
+                            class="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-100"
+                            disabled="@isSubmitting">
+                        Cancel
+                    </button>
+                </div>
+            }
+        </div>
+    </AuthorizeView>
+
+    @if (errors.Count > 0)
+    {
+        <div role="alert" class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            @foreach (string error in errors)
+            {
+                <p>@error</p>
+            }
+        </div>
+    }
+    else if (isLoading)
+    {
+        <p class="text-sm text-slate-500">Loading rooms...</p>
+    }
+    else if (rooms.Count == 0)
+    {
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+            <p class="font-semibold text-slate-900">No rooms found</p>
+            <p class="mt-2 text-sm text-slate-500">There are no rooms available yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            @foreach (RoomDto room in rooms)
+            {
+                List<BookingDto> roomBookings = GetRoomBookings(room);
+                <article class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                    @if (editingRoom?.Id == room.Id)
+                    {
+                        <div class="space-y-3">
+                            <div>
+                                <label for="@($"room-{room.Id}")" class="mb-1 block text-sm font-medium text-slate-700">Room name</label>
+                                <InputText id="@($"room-{room.Id}")" @bind-Value="editingRoom.Name"
+                                           class="block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" @onclick="UpdateRoomAsync"
+                                        class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                        disabled="@isSubmitting">
+                                    Save changes
+                                </button>
+                                <button type="button" @onclick="CancelEdit"
+                                        class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                                        disabled="@isSubmitting">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex items-start justify-between gap-4">
+                            <h2 class="text-xl font-semibold text-slate-900">@room.Name</h2>
+                            <span class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                                @roomBookings.Count booking(s)
+                            </span>
+                        </div>
+
+                        <AuthorizeView Roles="@AuthRoles.Admin">
+                            <div class="mt-4 flex gap-2">
+                                <button type="button" @onclick="() => BeginEdit(room)"
+                                        class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                        disabled="@isSubmitting">
+                                    Edit
+                                </button>
+                                <button type="button" @onclick="() => DeleteRoomAsync(room.Id)"
+                                        class="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                        disabled="@isSubmitting">
+                                    Delete
+                                </button>
+                            </div>
+                        </AuthorizeView>
+                    }
+
+                    @if (roomBookings.Count > 0)
+                    {
+                        <div class="mt-5 space-y-3 border-t border-slate-100 pt-4">
+                            @foreach (BookingDto booking in roomBookings.OrderBy(booking => booking.BookingStart))
+                            {
+                                <div class="rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                                    <p class="font-medium text-slate-700">@booking.BookingStart.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</p>
+                                    <p class="text-slate-500">@booking.BookingDuration.TotalMinutes minutes</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-500">No bookings scheduled.</p>
+                    }
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    private readonly List<string> errors = [];
+    private List<RoomDto> rooms = [];
+    private Dictionary<Guid, BookingDto> bookings = [];
+    private RoomDto? editingRoom;
+    private string newRoomName = string.Empty;
+    private bool showAddForm;
+    private bool isLoading = true;
+    private bool isSubmitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRoomsAsync();
+    }
+
+    private async Task LoadRoomsAsync()
+    {
+        isLoading = true;
+        try
+        {
+            errors.Clear();
+            ErrorOr<IEnumerable<RoomDto>> roomsResult = await Mediator.Send(new GetRoomsQuery([]));
+            if (roomsResult.IsError)
+            {
+                errors.AddRange(roomsResult.Errors.Select(error => error.Description));
+                return;
+            }
+
+            rooms = roomsResult.Value.ToList();
+            Guid[] bookingIds = rooms.SelectMany(room => room.Bookings).Distinct().ToArray();
+            if (bookingIds.Length == 0)
+            {
+                return;
+            }
+
+            ErrorOr<IEnumerable<BookingDto>> bookingsResult = await Mediator.Send(new GetBookingsQuery(bookingIds));
+            if (bookingsResult.IsError)
+            {
+                errors.AddRange(bookingsResult.Errors.Select(error => error.Description));
+                return;
+            }
+
+            bookings = bookingsResult.Value.ToDictionary(booking => booking.Id);
+        }
+        catch (Exception)
+        {
+            errors.Add("The rooms could not be loaded. Please try again.");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowAddRoom()
+    {
+        editingRoom = null;
+        newRoomName = string.Empty;
+        showAddForm = true;
+    }
+
+    private void CancelAddRoom()
+    {
+        newRoomName = string.Empty;
+        showAddForm = false;
+    }
+
+    private void BeginEdit(RoomDto room)
+    {
+        showAddForm = false;
+        editingRoom = new RoomDto
+        {
+            Id = room.Id,
+            Name = room.Name,
+            Bookings = [.. room.Bookings]
+        };
+    }
+
+    private void CancelEdit()
+    {
+        editingRoom = null;
+    }
+
+    private async Task CreateRoomAsync()
+    {
+        await ExecuteMutationAsync(async () =>
+        {
+            ErrorOr<Guid> result = await Mediator.Send(new CreateRoomCommand(new RoomDto { Name = newRoomName.Trim() }));
+            if (result.IsError)
+            {
+                return result.Errors.ToArray();
+            }
+
+            showAddForm = false;
+            newRoomName = string.Empty;
+            return [];
+        });
+    }
+
+    private async Task UpdateRoomAsync()
+    {
+        if (editingRoom is null)
+        {
+            return;
+        }
+
+        RoomDto room = editingRoom;
+        await ExecuteMutationAsync(async () =>
+        {
+            ErrorOr<Unit> result = await Mediator.Send(new UpdateRoomCommand(room));
+            if (result.IsError)
+            {
+                return result.Errors.ToArray();
+            }
+
+            editingRoom = null;
+            return [];
+        });
+    }
+
+    private async Task DeleteRoomAsync(Guid roomId)
+    {
+        await ExecuteMutationAsync(async () =>
+        {
+            ErrorOr<Unit> result = await Mediator.Send(new DeleteRoomsCommand([roomId]));
+            if (result.IsError)
+            {
+                return result.Errors.ToArray();
+            }
+
+            return [];
+        });
+    }
+
+    private async Task ExecuteMutationAsync(Func<Task<Error[]>> mutation)
+    {
+        errors.Clear();
+        isSubmitting = true;
+        try
+        {
+            Error[] mutationErrors = await mutation();
+            if (mutationErrors.Length > 0)
+            {
+                errors.AddRange(mutationErrors.Select(error => error.Description));
+                return;
+            }
+
+            await LoadRoomsAsync();
+        }
+        catch (Exception)
+        {
+            errors.Add("The room could not be saved. Please try again.");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private List<BookingDto> GetRoomBookings(RoomDto room)
+    {
+        return room.Bookings.Where(bookings.ContainsKey).Select(bookingId => bookings[bookingId]).ToList();
+    }
+}

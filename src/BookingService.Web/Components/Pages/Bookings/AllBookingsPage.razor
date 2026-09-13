@@ -1,0 +1,135 @@
+﻿@page "/AllBookings"
+@attribute [Authorize(Roles = AuthRoles.Admin)]
+
+@using ErrorOr
+@using Mediator
+@using BookingService.Web.Features.Auth
+@using BookingService.Web.Features.Auth.Dtos.Users
+@using BookingService.Web.Features.Auth.Handlers.GetUsers
+@using BookingService.Web.Features.Bookings.Dtos
+@using BookingService.Web.Features.Bookings.Handlers.GetBookings
+@using BookingService.Web.Features.Rooms.Dtos
+@using BookingService.Web.Features.Rooms.Handlers.GetRooms
+@inject IMediator Mediator
+
+<PageTitle>All Bookings</PageTitle>
+
+<section class="mx-auto max-w-7xl px-6 py-10">
+    <div class="mb-8">
+        <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">All Bookings</h1>
+        <p class="mt-2 text-slate-600">Review bookings across all users and rooms.</p>
+    </div>
+
+    @if (errors.Count > 0)
+    {
+        <div role="alert" class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            @foreach (string error in errors)
+            {
+                <p>@error</p>
+            }
+        </div>
+    }
+    else if (isLoading)
+    {
+        <p class="text-sm text-slate-500">Loading all bookings...</p>
+    }
+    else if (bookings.Count == 0)
+    {
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+            <p class="font-semibold text-slate-900">No bookings yet</p>
+            <p class="mt-2 text-sm text-slate-500">Bookings will appear here once users reserve rooms.</p>
+        </div>
+    }
+    else
+    {
+        <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">Room</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">User</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">When</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach (BookingDto booking in bookings.OrderBy(booking => booking.BookingStart))
+                        {
+                            <tr>
+                                <td class="px-6 py-4 text-sm font-semibold whitespace-nowrap text-slate-900">@GetRoomName(booking.RoomId)</td>
+                                <td class="px-6 py-4 text-sm whitespace-nowrap text-slate-600">@GetUserEmail(booking.UserId)</td>
+                                <td class="px-6 py-4 text-sm whitespace-nowrap text-slate-600">@booking.BookingStart.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</td>
+                                <td class="px-6 py-4 text-sm whitespace-nowrap text-slate-600">@booking.BookingDuration.TotalMinutes minutes</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private readonly List<string> errors = [];
+    private List<BookingDto> bookings = [];
+    private Dictionary<Guid, RoomDto> rooms = [];
+    private Dictionary<Guid, UserDto> users = [];
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            ErrorOr<IEnumerable<BookingDto>> bookingsResult = await Mediator.Send(new GetBookingsQuery([]));
+            if (bookingsResult.IsError)
+            {
+                errors.AddRange(bookingsResult.Errors.Select(error => error.Description));
+                return;
+            }
+
+            bookings = bookingsResult.Value.ToList();
+            if (bookings.Count == 0)
+            {
+                return;
+            }
+
+            Guid[] roomIds = bookings.Select(booking => booking.RoomId).Distinct().ToArray();
+            ErrorOr<IEnumerable<RoomDto>> roomsResult = await Mediator.Send(new GetRoomsQuery(roomIds));
+            if (roomsResult.IsError)
+            {
+                errors.AddRange(roomsResult.Errors.Select(error => error.Description));
+                return;
+            }
+
+            rooms = roomsResult.Value.ToDictionary(room => room.Id);
+            Guid[] userIds = bookings.Select(booking => booking.UserId).Distinct().ToArray();
+            ErrorOr<IEnumerable<UserDto>> usersResult = await Mediator.Send(new GetUsersQuery(userIds));
+            if (usersResult.IsError)
+            {
+                errors.AddRange(usersResult.Errors.Select(error => error.Description));
+                return;
+            }
+
+            users = usersResult.Value.ToDictionary(user => user.Id);
+        }
+        catch (Exception)
+        {
+            errors.Add("All bookings could not be loaded. Please try again.");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetRoomName(Guid roomId)
+    {
+        return rooms.TryGetValue(roomId, out RoomDto? room) ? room.Name : "Unknown room";
+    }
+
+    private string GetUserEmail(Guid userId)
+    {
+        return users.TryGetValue(userId, out UserDto? user) ? user.Email : "Unknown user";
+    }
+}

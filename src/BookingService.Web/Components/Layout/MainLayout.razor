@@ -1,12 +1,19 @@
 ﻿@inherits LayoutComponentBase
+@using BookingService.Web.Features.Auth
 
 <div class="min-h-screen bg-slate-50 text-slate-900">
     <header class="border-b border-slate-200 bg-white">
         <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <a href="/" class="text-lg font-bold tracking-tight text-indigo-600">BookingService</a>
+            <a href="/" class="text-lg font-bold tracking-tight text-indigo-600">Booking Service</a>
             <AuthorizeView Context="authContext">
                 <Authorized>
                     <div class="flex items-center gap-4 text-sm">
+                        <a href="/Rooms" class="font-semibold text-slate-600 hover:text-indigo-600">Rooms</a>
+                        <a href="/BookRoom" class="font-semibold text-slate-600 hover:text-indigo-600">Book a Room</a>
+                        <a href="/MyBookings" class="font-semibold text-slate-600 hover:text-indigo-600">My Bookings</a>
+                        <AuthorizeView Roles="@AuthRoles.Admin">
+                            <a href="/AllBookings" class="font-semibold text-slate-600 hover:text-indigo-600">All Bookings</a>
+                        </AuthorizeView>
                         <span class="text-slate-600">@authContext.User.Identity?.Name</span>
                         <button type="button" @onclick="LogoutAsync"
                                 class="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 transition hover:bg-slate-100">
@@ -14,12 +21,6 @@
                         </button>
                     </div>
                 </Authorized>
-                <NotAuthorized>
-                    <div class="flex items-center gap-4 text-sm">
-                        <a href="/Auth/Login" class="font-semibold text-slate-600 hover:text-indigo-600">Sign in</a>
-                        <a href="/Auth/Register" class="rounded-lg bg-indigo-600 px-3 py-2 font-semibold text-white hover:bg-indigo-700">Create account</a>
-                    </div>
-                </NotAuthorized>
             </AuthorizeView>
         </nav>
     </header>

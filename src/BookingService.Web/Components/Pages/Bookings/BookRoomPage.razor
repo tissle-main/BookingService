@@ -1,0 +1,276 @@
+﻿@page "/BookRoom"
+@attribute [Authorize]
+
+@using System.Globalization
+@using ErrorOr
+@using Mediator
+@using BookingService.Web.Features.Bookings.Dtos
+@using BookingService.Web.Features.Bookings.Handlers.CreateBooking
+@using BookingService.Web.Features.Bookings.Handlers.GetBookings
+@using BookingService.Web.Features.Rooms.Dtos
+@using BookingService.Web.Features.Rooms.Handlers.GetRooms
+@inject IMediator Mediator
+
+<PageTitle>Book a Room</PageTitle>
+
+<section class="mx-auto max-w-7xl px-6 py-10">
+    <div class="mb-8">
+        <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Book a Room</h1>
+        <p class="mt-2 text-slate-600">Choose a room, review its schedule, and reserve an available time.</p>
+    </div>
+
+    @if (errors.Count > 0)
+    {
+        <div role="alert" class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            @foreach (string error in errors)
+            {
+                <p>@error</p>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div role="status" class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            @successMessage
+        </div>
+    }
+
+    @if (isLoadingRooms)
+    {
+        <p class="text-sm text-slate-500">Loading rooms...</p>
+    }
+    else if (rooms.Count == 0)
+    {
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+            <p class="font-semibold text-slate-900">No rooms available</p>
+            <p class="mt-2 text-sm text-slate-500">There are no rooms available to book right now.</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+            <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                <h2 class="text-lg font-semibold text-slate-900">Reservation details</h2>
+                <div class="mt-5 space-y-5">
+                    <div>
+                        <label for="room-select" class="mb-1 block text-sm font-medium text-slate-700">Room</label>
+                        <select id="room-select" @bind="selectedRoomId" @bind:after="LoadSelectedRoomScheduleAsync"
+                                class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                            @foreach (RoomDto room in rooms)
+                            {
+                                <option value="@room.Id">@room.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="booking-start" class="mb-1 block text-sm font-medium text-slate-700">Start time</label>
+                        <input id="booking-start" type="datetime-local" value="@bookingStartText" @onchange="OnBookingStartChanged"
+                               class="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                    </div>
+
+                    <div>
+                        <label for="booking-duration" class="mb-1 block text-sm font-medium text-slate-700">Duration</label>
+                        <div class="flex items-center gap-3">
+                            <input id="booking-duration" type="number" min="1" step="1" @bind="durationMinutes"
+                                   class="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                            <span class="text-sm text-slate-500">minutes</span>
+                        </div>
+                    </div>
+
+                    <button type="button" @onclick="BookRoomAsync"
+                            class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            disabled="@isSubmitting">
+                        @(isSubmitting ? "Booking..." : "Book room")
+                    </button>
+                </div>
+            </div>
+
+            <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-900">Room schedule</h2>
+                        <p class="mt-1 text-sm text-slate-500">@GetSelectedRoomName()</p>
+                    </div>
+                    <a href="/Rooms" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">View rooms</a>
+                </div>
+
+                @if (isLoadingSchedule)
+                {
+                    <p class="mt-6 text-sm text-slate-500">Loading schedule...</p>
+                }
+                else if (selectedRoomBookings.Count == 0)
+                {
+                    <div class="mt-6 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                        This room has no scheduled bookings.
+                    </div>
+                }
+                else
+                {
+                    <div class="mt-6 space-y-3">
+                        @foreach (BookingDto booking in selectedRoomBookings.OrderBy(booking => booking.BookingStart))
+                        {
+                            <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                                <p class="font-medium text-slate-700">@booking.BookingStart.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</p>
+                                <p class="mt-1 text-sm text-slate-500">Ends @booking.BookingStart.Add(booking.BookingDuration).ToLocalTime().ToString("h:mm tt") · @booking.BookingDuration.TotalMinutes minutes</p>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private readonly List<string> errors = [];
+    private List<RoomDto> rooms = [];
+    private List<BookingDto> selectedRoomBookings = [];
+    private Guid? selectedRoomId;
+    private string bookingStartText = string.Empty;
+    private int durationMinutes = 60;
+    private string? successMessage;
+    private bool isLoadingRooms = true;
+    private bool isLoadingSchedule;
+    private bool isSubmitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        bookingStartText = GetDefaultStartText();
+        await LoadRoomsAsync();
+    }
+
+    private async Task LoadRoomsAsync()
+    {
+        isLoadingRooms = true;
+        try
+        {
+            ErrorOr<IEnumerable<RoomDto>> result = await Mediator.Send(new GetRoomsQuery([]));
+            if (result.IsError)
+            {
+                errors.AddRange(result.Errors.Select(error => error.Description));
+                return;
+            }
+
+            rooms = result.Value.OrderBy(room => room.Name).ToList();
+            if (selectedRoomId is null || rooms.All(room => room.Id != selectedRoomId.Value))
+            {
+                selectedRoomId = rooms.FirstOrDefault()?.Id;
+            }
+
+            await LoadSelectedRoomScheduleAsync();
+        }
+        catch (Exception)
+        {
+            errors.Add("The rooms could not be loaded. Please try again.");
+        }
+        finally
+        {
+            isLoadingRooms = false;
+        }
+    }
+
+    private async Task LoadSelectedRoomScheduleAsync()
+    {
+        selectedRoomBookings = [];
+        if (selectedRoomId is not Guid roomId)
+        {
+            return;
+        }
+
+        RoomDto? room = rooms.FirstOrDefault(candidate => candidate.Id == roomId);
+        if (room is null || room.Bookings.Count == 0)
+        {
+            return;
+        }
+
+        isLoadingSchedule = true;
+        try
+        {
+            ErrorOr<IEnumerable<BookingDto>> result = await Mediator.Send(new GetBookingsQuery(room.Bookings.ToArray()));
+            if (result.IsError)
+            {
+                errors.AddRange(result.Errors.Select(error => error.Description));
+                return;
+            }
+
+            selectedRoomBookings = result.Value.OrderBy(booking => booking.BookingStart).ToList();
+        }
+        catch (Exception)
+        {
+            errors.Add("The room schedule could not be loaded. Please try again.");
+        }
+        finally
+        {
+            isLoadingSchedule = false;
+        }
+    }
+
+    private async Task BookRoomAsync()
+    {
+        errors.Clear();
+        successMessage = null;
+        if (selectedRoomId is not Guid roomId)
+        {
+            errors.Add("Select a room before booking.");
+            return;
+        }
+
+        if (!DateTime.TryParse(bookingStartText, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal, out DateTime start))
+        {
+            errors.Add("Enter a valid booking start time.");
+            return;
+        }
+
+        if (durationMinutes <= 0)
+        {
+            errors.Add("Duration must be greater than zero minutes.");
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            BookingDto booking = new()
+            {
+                BookingStart = new DateTimeOffset(start),
+                BookingDuration = TimeSpan.FromMinutes(durationMinutes),
+                RoomId = roomId
+            };
+            ErrorOr<Guid> result = await Mediator.Send(new CreateBookingCommand(booking));
+            if (result.IsError)
+            {
+                errors.AddRange(result.Errors.Select(error => error.Description));
+                return;
+            }
+
+            successMessage = "Room booked successfully.";
+            await LoadRoomsAsync();
+        }
+        catch (Exception)
+        {
+            errors.Add("The room could not be booked. Please try again.");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void OnBookingStartChanged(ChangeEventArgs args)
+    {
+        bookingStartText = args.Value?.ToString() ?? string.Empty;
+    }
+
+    private string GetSelectedRoomName()
+    {
+        return rooms.FirstOrDefault(room => room.Id == selectedRoomId)?.Name ?? "Select a room to see its schedule";
+    }
+
+    private static string GetDefaultStartText()
+    {
+        DateTime start = DateTime.Now.AddHours(1);
+        return start.AddMinutes(-start.Minute % 30).ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
+    }
+}

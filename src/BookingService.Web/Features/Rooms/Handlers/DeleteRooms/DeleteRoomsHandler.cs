@@ -19,7 +19,7 @@ public sealed class DeleteRoomsHandler(AppDbContext thisDbContext) : ICommandHan
             return Unit.Value;
         }
 
-        RoomEntity[] rooms = await thisDbContext.Rooms.AsNoTracking().Where(e => ids.Contains(e.Id)).ToArrayAsync(cancellationToken);
+        RoomEntity[] rooms = await thisDbContext.Rooms.Where(e => ids.Contains(e.Id)).ToArrayAsync(cancellationToken);
         if(ids.Length > rooms.Length)
         {
             IEnumerable<Guid> existingIds = rooms.Select(r => r.Id);
