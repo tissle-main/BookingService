@@ -64,6 +64,12 @@ public static class AuthDbSeeder
                 {
                     return result.ToErrors().ToList();
                 }
+
+                result = await userManager.AddToRoleAsync(user, AuthRoles.Admin);
+                if(!result.Succeeded)
+                {
+                    return result.ToErrors().ToList();
+                }
             }
 
             return Unit.Value;

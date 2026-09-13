@@ -12,7 +12,7 @@ public sealed class DbSeedingHandler(IServiceProvider thisServiceProvider) : ICo
         ErrorOr<Unit> errorOrValue = await thisServiceProvider.AddRolesAsync();
         return await errorOrValue.ThenAsync(async(Unit unit) =>
         {
-            return await thisServiceProvider.AddRolesAsync();
+            return await thisServiceProvider.AddAdminAsync();
         });
     }
     #endregion
