@@ -14,10 +14,12 @@ public sealed class GetBookingsHandler(AppDbContext thisDbContext) : IQueryHandl
         Guid[] ids = query.Ids.Distinct().ToArray();
         if(ids.Length == 0)
         {
-            return await thisDbContext.Bookings.AsNoTracking().ProjectToDto().ToArrayAsync(cancellationToken);
+            return await thisDbContext.Bookings.AsNoTracking().OrderBy(b => b.BookingStart).ProjectToDto().ToArrayAsync(cancellationToken);
         }
 
-        BookingDto[] bookings = await thisDbContext.Bookings.AsNoTracking().Where(e => ids.Contains(e.Id)).ProjectToDto().ToArrayAsync(cancellationToken);
+        BookingDto[] bookings = await thisDbContext.Bookings.AsNoTracking().Where(
+            e => ids.Contains(e.Id)
+        ).OrderBy(b => b.BookingStart).ProjectToDto().ToArrayAsync(cancellationToken);
         if(ids.Length > bookings.Length)
         {
             IEnumerable<Guid> existingIds = bookings.Select(b => b.Id);

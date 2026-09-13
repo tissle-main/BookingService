@@ -14,10 +14,12 @@ public sealed class GetRoomsHandler(AppDbContext thisDbContext) : IQueryHandler<
         Guid[] ids = query.Ids.Distinct().ToArray();
         if(ids.Length == 0)
         {
-            return await thisDbContext.Rooms.AsNoTracking().ProjectToDto().ToArrayAsync(cancellationToken);
+            return await thisDbContext.Rooms.AsNoTracking().ProjectToDto().OrderByDescending(e => e.CreatedAt).ToArrayAsync(cancellationToken);
         }
 
-        RoomDto[] rooms = await thisDbContext.Rooms.AsNoTracking().Where(e => ids.Contains(e.Id)).ProjectToDto().ToArrayAsync(cancellationToken);
+        RoomDto[] rooms = await thisDbContext.Rooms.AsNoTracking().Where(
+            e => ids.Contains(e.Id)
+        ).OrderByDescending(e => e.CreatedAt).ProjectToDto().ToArrayAsync(cancellationToken);
         if(ids.Length > rooms.Length)
         {
             IEnumerable<Guid> existingIds = rooms.Select(r => r.Id);

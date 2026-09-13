@@ -4,6 +4,7 @@ using BookingService.Data.Features.Bookings;
 using BookingService.Data.Features.Auth.Users;
 using BookingService.Data.Features.Auth.Roles;
 using BookingService.Data.Shared.KeyedEntities;
+using BookingService.Data.Shared.CreatedAtEntities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace BookingService.Data;
@@ -24,11 +25,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : Ident
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         this.GenerateIdForKeyedEntities();
+        this.SetUtcNowForCreatedAtEntities();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         this.GenerateIdForKeyedEntities();
+        this.SetUtcNowForCreatedAtEntities();
         return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
     #endregion

@@ -3,6 +3,7 @@
 public sealed class RoomDto
 {
     public Guid Id { get; set; }
+    public DateTime CreatedAt { get; set; }
     public string Name { get; set; } = "";
     public List<Guid> Bookings { get; set; } = [];
 }

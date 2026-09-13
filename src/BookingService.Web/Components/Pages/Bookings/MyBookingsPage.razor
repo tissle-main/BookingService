@@ -47,14 +47,30 @@
                 <table class="min-w-full divide-y divide-slate-200">
                     <thead class="bg-slate-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">Room</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">When</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">Duration</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">Booked by</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                <button type="button" @onclick='() => SetSort("Room")' class="inline-flex items-center gap-1 hover:text-indigo-600">
+                                    Room <span aria-hidden="true">@GetSortIndicator("Room")</span>
+                                </button>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                <button type="button" @onclick='() => SetSort("When")' class="inline-flex items-center gap-1 hover:text-indigo-600">
+                                    When <span aria-hidden="true">@GetSortIndicator("When")</span>
+                                </button>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                <button type="button" @onclick='() => SetSort("Duration")' class="inline-flex items-center gap-1 hover:text-indigo-600">
+                                    Duration <span aria-hidden="true">@GetSortIndicator("Duration")</span>
+                                </button>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                <button type="button" @onclick='() => SetSort("User")' class="inline-flex items-center gap-1 hover:text-indigo-600">
+                                    Booked by <span aria-hidden="true">@GetSortIndicator("User")</span>
+                                </button>
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        @foreach (BookingDto booking in bookings.OrderBy(booking => booking.BookingStart))
+                        @foreach (BookingDto booking in SortedBookings)
                         {
                             <tr>
                                 <td class="px-6 py-4 text-sm font-semibold whitespace-nowrap text-slate-900">@GetRoomName(booking.RoomId)</td>
@@ -70,14 +86,71 @@
     }
 </section>
 
-@code {
+@code
+{
     [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
     private readonly List<string> errors = [];
     private List<BookingDto> bookings = [];
     private Dictionary<Guid, RoomDto> rooms = [];
     private Dictionary<Guid, UserDto> users = [];
+    private string sortColumn = "When";
+    private bool sortDescending;
     private bool isLoading = true;
+
+    private IEnumerable<BookingDto> SortedBookings
+    {
+        get
+        {
+            switch(sortColumn)
+            {
+                case "Room":
+                {
+                    if(sortDescending)
+                    {
+                        return bookings.OrderByDescending(b => GetRoomName(b.RoomId)).ThenBy(b => b.BookingStart);
+                    }
+                    else
+                    {
+                        return bookings.OrderBy(b => GetRoomName(b.RoomId)).ThenBy(b => b.BookingStart);
+                    }
+                }
+                case "Duration":
+                {
+                    if(sortDescending)
+                    {
+                        return bookings.OrderByDescending(booking => booking.BookingDuration).ThenBy(b => b.BookingStart);                        
+                    }
+                    else
+                    {
+                        return bookings.OrderBy(booking => booking.BookingDuration).ThenBy(b => b.BookingStart);
+                    }                    
+                }
+                case "User":
+                {
+                    if(sortDescending)
+                    {
+                        return bookings.OrderByDescending(booking => GetUserEmail(booking.UserId)).ThenBy(b => b.BookingStart);
+                    }
+                    else
+                    {
+                        return bookings.OrderBy(booking => GetUserEmail(booking.UserId)).ThenBy(b => b.BookingStart);
+                    }
+                }
+                default:
+                {
+                    if(sortDescending)
+                    {
+                        return bookings.OrderByDescending(booking => booking.BookingStart);
+                    }
+                    else
+                    {
+                        return bookings.OrderBy(booking => booking.BookingStart);
+                    }
+                }
+            }
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -141,5 +214,22 @@
     private string GetUserEmail(Guid userId)
     {
         return users.TryGetValue(userId, out UserDto? user) ? user.Email : "Unknown user";
+    }
+
+    private void SetSort(string column)
+    {
+        if (sortColumn == column)
+        {
+            sortDescending = !sortDescending;
+            return;
+        }
+
+        sortColumn = column;
+        sortDescending = false;
+    }
+
+    private string GetSortIndicator(string column)
+    {
+        return sortColumn == column ? (sortDescending ? "↓" : "↑") : string.Empty;
     }
 }
