@@ -7,9 +7,9 @@ namespace BookingService.Web.Features.Auth.Handlers.CheckLoggedInUser;
 public sealed record class CheckLoggedInUserCommand(string Email) : IAuthorizedBehaviorMessage, ICommand<ErrorOr<bool>>
 {
     #region Interfaces
-    public string Role
+    public string[] AllowedRoles
     {
-        get => AuthRoles.OneOf(AuthRoles.User, AuthRoles.Admin);
+        get => CheckLoggedInUserEndpoint.AllowedRoles;
     }
     #endregion
 }

@@ -33,10 +33,10 @@ public static class LoginUserEndpoint
     {
         public void AddLoginUserEndpoint()
         {
-            thisBuilder.MapPost(Url, LoginUser)
-                .WithName(nameof(LoginUser))
-                .Produces<LoginUserResponse>(StatusCodes.Status200OK)
-                .AddLoginUserProductionProblems();
+            RouteHandlerBuilder routeBuilder = thisBuilder.MapPost(Url, LoginUser);
+            routeBuilder.WithName(nameof(LoginUser));
+            routeBuilder.Produces<LoginUserResponse>(StatusCodes.Status200OK);
+            routeBuilder.AddLoginUserProductionProblems();
         }
     }
     extension(HttpClient thisHttpClient)

@@ -27,10 +27,10 @@ public static class DbSeedingEndpoint
     {
         public void AddDbSeedingEndpoint()
         {
-            thisBuilder.MapPost(Url, DbSeeding)
-                .WithName(nameof(DbSeeding))
-                .Produces(StatusCodes.Status204NoContent)
-                .AddDbSeedingProductionProblems();
+            RouteHandlerBuilder routeBuilder = thisBuilder.MapPost(Url, DbSeeding);
+            routeBuilder.WithName(nameof(DbSeeding));
+            routeBuilder.Produces(StatusCodes.Status204NoContent);
+            routeBuilder.AddDbSeedingProductionProblems();
         }
     }
     extension(HttpClient thisHttpClient)

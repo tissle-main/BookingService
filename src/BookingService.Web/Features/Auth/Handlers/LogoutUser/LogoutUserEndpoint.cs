@@ -28,10 +28,10 @@ public static class LogoutUserEndpoint
     {
         public void AddLogoutUserEndpoint()
         {
-            thisBuilder.MapPost(Url, LogoutUser)
-                .WithName(nameof(LogoutUser))
-                .Produces(StatusCodes.Status204NoContent)
-                .AddLogoutUserProductionProblems();
+            RouteHandlerBuilder routeBuilder = thisBuilder.MapPost(Url, LogoutUser);
+            routeBuilder.WithName(nameof(LogoutUser));
+            routeBuilder.Produces(StatusCodes.Status204NoContent);
+            routeBuilder.AddLogoutUserProductionProblems();
         }
     }
     extension(HttpClient thisHttpClient)

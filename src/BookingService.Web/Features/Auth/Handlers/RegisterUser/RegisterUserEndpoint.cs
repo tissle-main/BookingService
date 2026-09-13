@@ -33,10 +33,10 @@ public static class RegisterUserEndpoint
     {
         public void AddRegisterUserEndpoint()
         {
-            thisBuilder.MapPost(Url, RegisterUser)
-                .WithName(nameof(RegisterUser))
-                .Produces(StatusCodes.Status204NoContent)
-                .AddRegisterUserProductionProblems();
+            RouteHandlerBuilder routeBuilder = thisBuilder.MapPost(Url, RegisterUser);
+            routeBuilder.WithName(nameof(RegisterUser));
+            routeBuilder.Produces(StatusCodes.Status204NoContent);
+            routeBuilder.AddRegisterUserProductionProblems();
         }
     }
     extension(HttpClient thisHttpClient)

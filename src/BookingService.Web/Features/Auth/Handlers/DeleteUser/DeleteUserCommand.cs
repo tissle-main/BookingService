@@ -8,9 +8,9 @@ namespace BookingService.Web.Features.Auth.Handlers.DeleteUser;
 public sealed record class DeleteUserCommand : IDbTransactionBehaviorMessage, IAuthorizedBehaviorMessage, ICommand<ErrorOr<Unit>>
 {
     #region Intefaces
-    public string Role
+    public string[] AllowedRoles
     {
-        get => AuthRoles.User;
+        get => DeleteUserEndpoint.AllowedRoles;
     }
     #endregion
 }

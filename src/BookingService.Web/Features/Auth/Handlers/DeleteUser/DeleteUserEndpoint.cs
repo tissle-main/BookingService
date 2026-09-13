@@ -9,7 +9,8 @@ namespace BookingService.Web.Features.Auth.Handlers.DeleteUser;
 public static class DeleteUserEndpoint
 {
     public const string Url = "/api/auth/delete";
-    public const string Role = Auth.AuthRoles.User;
+
+    public static string[] AllowedRoles { get; } = [AuthRoles.User];
 
     public static async Task<IResult> DeleteUser(
         [FromServices] IMediator mediator,
@@ -31,10 +32,17 @@ public static class DeleteUserEndpoint
     {
         public void AddDeleteUserEndpoint()
         {
-            thisBuilder.MapDelete(Url, DeleteUser).RequireAuthorization(cfg =>
+            RouteHandlerBuilder routeBuilder = thisBuilder.MapDelete(Url, DeleteUser);
+            routeBuilder.RequireAuthorization(cfg =>
             {
-                cfg.RequireRole(Role);
-            }).WithName(nameof(DeleteUser)).Produces(StatusCodes.Status204NoContent).AddDeleteUserProductionProblems();
+                if(AllowedRoles.Length > 0)
+                {
+                    cfg.RequireRole(AllowedRoles);
+                }
+            });
+            routeBuilder.WithName(nameof(DeleteUser));
+            routeBuilder.Produces(StatusCodes.Status204NoContent);
+            routeBuilder.AddDeleteUserProductionProblems();
         }        
     }
     extension(HttpClient thisHttpClient)

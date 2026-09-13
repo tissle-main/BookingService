@@ -25,21 +25,16 @@ public sealed class AuthorizedBehavior<TMessage, TErrorOrValue>(
         {
             return FromErrors([Error.Unauthorized()]);
         }
-        string[] roles = message.Role.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        bool hasRequiredRole = false;
-        foreach(string role in roles)
-        {
-            if(await thisUserManager.IsInRoleAsync(user, role))
-            {
-                hasRequiredRole = true;
-                break;
-            }
-        }
-        if(!hasRequiredRole)
+
+        string[] allowedRoles = message.AllowedRoles;
+        IList<string> roles = await thisUserManager.GetRolesAsync(user);
+        if(!roles.Intersect(allowedRoles).Any())
         {
             return FromErrors([Error.Forbidden()]);
         }
+
         message.User = user;
+        message.Roles = roles;
         return await next(message, cancellationToken);
     }
     #endregion

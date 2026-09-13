@@ -10,6 +10,8 @@ public static class CheckLoggedInUserEndpoint
 {
     public const string Url = "/api/auth/check";
 
+    public static string[] AllowedRoles { get; } = AuthRoles.Any;
+
     public static async Task<IResult> CheckLoggedInUser(
         [FromQuery] string email,
         [FromServices] IMediator mediator,
@@ -31,11 +33,11 @@ public static class CheckLoggedInUserEndpoint
     {
         public void AddCheckLoggedInUserEndpoint()
         {
-            thisBuilder.MapGet(Url, CheckLoggedInUser)
-                .RequireAuthorization(cfg => cfg.RequireRole(AuthRoles.User, AuthRoles.Admin))
-                .WithName(nameof(CheckLoggedInUser))
-                .Produces<bool>(StatusCodes.Status200OK)
-                .AddCheckLoggedInUserProductionProblems();
+            RouteHandlerBuilder routeBuilder = thisBuilder.MapGet(Url, CheckLoggedInUser);
+            routeBuilder.RequireAuthorization(cfg => cfg.RequireRole(AllowedRoles));
+            routeBuilder.WithName(nameof(CheckLoggedInUser));
+            routeBuilder.Produces<bool>(StatusCodes.Status200OK);
+            routeBuilder.AddCheckLoggedInUserProductionProblems();
         }
     }
     extension(HttpClient thisHttpClient)

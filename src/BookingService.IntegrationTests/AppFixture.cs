@@ -60,6 +60,7 @@ public sealed class AppFixture : AspireFixture<BookingService_AppHost>
         await base.InitializeAsync();
 
         HttpClient = base.CreateHttpClient(AppHostResources.Web);
+        HttpClient.Timeout = TimeSpan.FromMinutes(5);
         ConnectionString = await base.GetConnectionStringAsync(AppHostResources.AppDatabase) ?? throw new NullReferenceException("ConnectionString is null");
         DbOptions = new DbContextOptionsBuilder<AppDbContext>().UseSqlServer(ConnectionString).Options;
         await ExecuteDbContextAsync(async db =>

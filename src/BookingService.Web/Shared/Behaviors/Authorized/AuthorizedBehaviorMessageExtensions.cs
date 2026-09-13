@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using BookingService.Data.Features.Auth.Roles;
 using BookingService.Data.Features.Auth.Users;
 
 namespace BookingService.Web.Shared.Behaviors.Authorized;
@@ -15,6 +16,14 @@ public static class AuthorizedBehaviorMessageExtensions
             set
             {
                 thisMessage.GetExtraProperties().User = value;
+            }
+        }
+        public IList<string> Roles
+        {
+            get => thisMessage.GetExtraProperties().Roles;
+            set
+            {
+                thisMessage.GetExtraProperties().Roles = value;
             }
         }
 
