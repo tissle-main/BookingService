@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using BookingService.Data.Features.Auth.Users;
 using BookingService.Data.Features.Auth.Roles;
 using BookingService.Web.Features.Auth.Options;
+using BookingService.Web.Features.Auth.Handlers.GetUsers;
 using BookingService.Web.Features.Auth.Handlers.LoginUser;
 using BookingService.Web.Features.Auth.Handlers.DeleteUser;
 using BookingService.Web.Features.Auth.Handlers.LogoutUser;
@@ -37,9 +38,10 @@ public sealed class AuthFeatureProvider : FeatureProvider
 
         if(app.Environment.IsEnvironment(ProfileNames.Test))
         {
+            app.AddCheckLoggedInUserEndpoint();
             app.AddRegisterUserEndpoint();
             app.AddDeleteUserEndpoint();
-            app.AddCheckLoggedInUserEndpoint();
+            app.AddGetUsersEndpoint();
         }
         app.AddLoginUserEndpoint();
         app.AddLogoutUserEndpoint();

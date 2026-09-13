@@ -33,13 +33,7 @@ public static class DeleteUserEndpoint
         public void AddDeleteUserEndpoint()
         {
             RouteHandlerBuilder routeBuilder = thisBuilder.MapDelete(Url, DeleteUser);
-            routeBuilder.RequireAuthorization(cfg =>
-            {
-                if(AllowedRoles.Length > 0)
-                {
-                    cfg.RequireRole(AllowedRoles);
-                }
-            });
+            routeBuilder.RequireAuthorization(cfg => cfg.RequireRole(AllowedRoles));
             routeBuilder.WithName(nameof(DeleteUser));
             routeBuilder.Produces(StatusCodes.Status204NoContent);
             routeBuilder.AddDeleteUserProductionProblems();
