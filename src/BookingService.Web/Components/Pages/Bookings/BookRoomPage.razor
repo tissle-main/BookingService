@@ -10,6 +10,8 @@
 @using BookingService.Web.Features.Rooms.Dtos
 @using BookingService.Web.Features.Rooms.Handlers.GetRooms
 @inject IMediator Mediator
+@inject HubConnection HubClient
+@implements IAsyncDisposable
 
 <PageTitle>Book a Room</PageTitle>
 
@@ -134,13 +136,53 @@
     private bool isLoadingRooms = true;
     private bool isLoadingSchedule;
     private bool isSubmitting;
+    private List<IDisposable> SignalRSubscriptions = [];
 
     protected override async Task OnInitializedAsync()
     {
         bookingStartText = GetDefaultStartText();
         await LoadRoomsAsync();
+        SignalRSubscriptions.Add(
+            HubClient.On<Guid>(
+                nameof(ISignalRClient.BookingsUpdated),
+                async roomId => await base.InvokeAsync(
+                    async () =>
+                    {
+                        if (selectedRoomId == roomId)
+                        {
+                            await LoadRoomsAsync();
+                            StateHasChanged();
+                        }
+                    }
+                )
+            )
+        );
+        SignalRSubscriptions.Add(
+            HubClient.On(
+                nameof(ISignalRClient.RoomsUpdated),
+                async() => await base.InvokeAsync(
+                    async() =>
+                    {
+                        await LoadRoomsAsync();
+                        StateHasChanged();
+                    }
+                )
+            )
+        );
+        if(HubClient.State is HubConnectionState.Disconnected)
+        {           
+            await HubClient.StartAsync();
+        }
     }
-
+    public async ValueTask DisposeAsync()
+    {
+        await HubClient.StopAsync();
+        foreach(IDisposable subscription in SignalRSubscriptions)
+        {
+            subscription.Dispose();
+        }
+        SignalRSubscriptions.Clear();
+    }
     private async Task LoadRoomsAsync()
     {
         isLoadingRooms = true;
@@ -170,7 +212,6 @@
             isLoadingRooms = false;
         }
     }
-
     private async Task LoadSelectedRoomScheduleAsync()
     {
         selectedRoomBookings = [];
@@ -206,7 +247,6 @@
             isLoadingSchedule = false;
         }
     }
-
     private async Task BookRoomAsync()
     {
         errors.Clear();
@@ -246,7 +286,6 @@
             }
 
             successMessage = "Room booked successfully.";
-            await LoadRoomsAsync();
         }
         catch (Exception)
         {
@@ -257,17 +296,14 @@
             isSubmitting = false;
         }
     }
-
     private void OnBookingStartChanged(ChangeEventArgs args)
     {
         bookingStartText = args.Value?.ToString() ?? string.Empty;
     }
-
     private string GetSelectedRoomName()
     {
         return rooms.FirstOrDefault(room => room.Id == selectedRoomId)?.Name ?? "Select a room to see its schedule";
     }
-
     private static string GetDefaultStartText()
     {
         DateTime start = DateTime.Now.AddHours(1);

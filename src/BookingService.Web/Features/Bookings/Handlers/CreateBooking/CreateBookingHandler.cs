@@ -1,7 +1,9 @@
 using ErrorOr;
 using Mediator;
 using BookingService.Data;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using BookingService.Web.Features.SignalR;
 using BookingService.Data.Features.Bookings;
 using BookingService.Data.Features.Auth.Users;
 using BookingService.Web.Features.Bookings.Dtos;
@@ -9,7 +11,10 @@ using BookingService.Web.Shared.Behaviors.Authorized;
 
 namespace BookingService.Web.Features.Bookings.Handlers.CreateBooking;
 
-public sealed class CreateBookingHandler(AppDbContext thisDbContext) : ICommandHandler<CreateBookingCommand, ErrorOr<Guid>>
+public sealed class CreateBookingHandler(
+    AppDbContext thisDbContext,
+    IHubContext<SignalRHub, ISignalRClient> signalr
+) : ICommandHandler<CreateBookingCommand, ErrorOr<Guid>>
 {
     #region Interfaces
     public async ValueTask<ErrorOr<Guid>> Handle(CreateBookingCommand command, CancellationToken cancellationToken)
@@ -29,6 +34,7 @@ public sealed class CreateBookingHandler(AppDbContext thisDbContext) : ICommandH
         booking.UserId = user.Id;
         await thisDbContext.Bookings.AddAsync(booking, cancellationToken);
         await thisDbContext.SaveChangesAsync(cancellationToken);
+        await signalr.Clients.All.BookingsUpdated(booking.RoomId);
         return booking.Id;
     }
     #endregion

@@ -1,16 +1,18 @@
-﻿@page "/MyBookings"
-@attribute [Authorize]
-
-@using System.Security.Claims
-@using ErrorOr
+﻿@using ErrorOr
 @using Mediator
+@using System.Security.Claims
+@using BookingService.Web.Features.Rooms.Dtos
+@using BookingService.Web.Features.Bookings.Dtos
 @using BookingService.Web.Features.Auth.Dtos.Users
 @using BookingService.Web.Features.Auth.Handlers.GetUsers
-@using BookingService.Web.Features.Bookings.Dtos
-@using BookingService.Web.Features.Bookings.Handlers.GetBookings
-@using BookingService.Web.Features.Rooms.Dtos
 @using BookingService.Web.Features.Rooms.Handlers.GetRooms
+@using BookingService.Web.Features.Bookings.Handlers.GetBookings
+
+@page "/MyBookings"
+@attribute [Authorize]
 @inject IMediator Mediator
+@inject HubConnection HubClient
+@implements IAsyncDisposable
 
 <PageTitle>My Bookings</PageTitle>
 
@@ -94,6 +96,7 @@
     private List<BookingDto> bookings = [];
     private Dictionary<Guid, RoomDto> rooms = [];
     private Dictionary<Guid, UserDto> users = [];
+    private List<IDisposable> SignalRSubscriptions = [];
     private string sortColumn = "When";
     private bool sortDescending;
     private bool isLoading = true;
@@ -154,6 +157,38 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadDataAsync();
+        SignalRSubscriptions.Add(
+            HubClient.On<Guid>(
+                nameof(ISignalRClient.BookingsUpdated),
+                async roomId => await base.InvokeAsync(
+                    async () =>
+                    {
+                        await LoadDataAsync();
+                        StateHasChanged();
+                    }
+                )
+            )
+        );
+        SignalRSubscriptions.Add(
+            HubClient.On(
+                nameof(ISignalRClient.RoomsUpdated),
+                async () => await base.InvokeAsync(
+                    async () =>
+                    {
+                        await LoadDataAsync();
+                        StateHasChanged();
+                    }
+                )
+            )
+        );
+        if(HubClient.State is HubConnectionState.Disconnected)
+        {
+            await HubClient.StartAsync();
+        }
+    }
+    private async ValueTask LoadDataAsync()
+    {
         try
         {
             AuthenticationState authenticationState = await AuthenticationStateTask;
@@ -205,17 +240,23 @@
             isLoading = false;
         }
     }
-
+    public async ValueTask DisposeAsync()
+    {
+        await HubClient.StopAsync();
+        foreach(IDisposable subscription in SignalRSubscriptions)
+        {
+            subscription.Dispose();
+        }
+        SignalRSubscriptions.Clear();
+    }
     private string GetRoomName(Guid roomId)
     {
         return rooms.TryGetValue(roomId, out RoomDto? room) ? room.Name : "Unknown room";
     }
-
     private string GetUserEmail(Guid userId)
     {
         return users.TryGetValue(userId, out UserDto? user) ? user.Email : "Unknown user";
     }
-
     private void SetSort(string column)
     {
         if (sortColumn == column)
@@ -227,7 +268,6 @@
         sortColumn = column;
         sortDescending = false;
     }
-
     private string GetSortIndicator(string column)
     {
         return sortColumn == column ? (sortDescending ? "↓" : "↑") : string.Empty;

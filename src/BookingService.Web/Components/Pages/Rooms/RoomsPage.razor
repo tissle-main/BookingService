@@ -12,6 +12,8 @@
 @using BookingService.Web.Features.Rooms.Handlers.GetRooms
 @using BookingService.Web.Features.Rooms.Handlers.UpdateRoom
 @inject IMediator Mediator
+@inject HubConnection HubClient
+@implements IAsyncDisposable
 
 <PageTitle>Rooms</PageTitle>
 
@@ -154,7 +156,8 @@
     }
 </section>
 
-@code {
+@code
+{
     private readonly List<string> errors = [];
     private List<RoomDto> rooms = [];
     private Dictionary<Guid, BookingDto> bookings = [];
@@ -163,12 +166,37 @@
     private bool showAddForm;
     private bool isLoading = true;
     private bool isSubmitting;
+    private List<IDisposable> SignalRSubscriptions = [];
 
     protected override async Task OnInitializedAsync()
     {
         await LoadRoomsAsync();
+        SignalRSubscriptions.Add(
+            HubClient.On(
+                nameof(ISignalRClient.RoomsUpdated),
+                async () => await base.InvokeAsync(
+                    async () =>
+                    {
+                        await LoadRoomsAsync();
+                        StateHasChanged();
+                    }
+                )
+            )
+        );
+        if(HubClient.State is HubConnectionState.Disconnected)
+        {
+            await HubClient.StartAsync();
+        }
     }
-
+    public async ValueTask DisposeAsync()
+    {
+        await HubClient.StopAsync();
+        foreach(IDisposable subscription in SignalRSubscriptions)
+        {
+            subscription.Dispose();
+        }
+        SignalRSubscriptions.Clear();
+    }
     private async Task LoadRoomsAsync()
     {
         isLoading = true;
@@ -207,20 +235,17 @@
             isLoading = false;
         }
     }
-
     private void ShowAddRoom()
     {
         editingRoom = null;
         newRoomName = string.Empty;
         showAddForm = true;
     }
-
     private void CancelAddRoom()
     {
         newRoomName = string.Empty;
         showAddForm = false;
     }
-
     private void BeginEdit(RoomDto room)
     {
         showAddForm = false;
@@ -231,12 +256,10 @@
             Bookings = [.. room.Bookings]
         };
     }
-
     private void CancelEdit()
     {
         editingRoom = null;
     }
-
     private async Task CreateRoomAsync()
     {
         await ExecuteMutationAsync(async () =>
@@ -252,7 +275,6 @@
             return [];
         });
     }
-
     private async Task UpdateRoomAsync()
     {
         if (editingRoom is null)
@@ -273,7 +295,6 @@
             return [];
         });
     }
-
     private async Task DeleteRoomAsync(Guid roomId)
     {
         await ExecuteMutationAsync(async () =>
@@ -287,7 +308,6 @@
             return [];
         });
     }
-
     private async Task ExecuteMutationAsync(Func<Task<Error[]>> mutation)
     {
         errors.Clear();
@@ -300,8 +320,6 @@
                 errors.AddRange(mutationErrors.Select(error => error.Description));
                 return;
             }
-
-            await LoadRoomsAsync();
         }
         catch (Exception)
         {
@@ -312,7 +330,6 @@
             isSubmitting = false;
         }
     }
-
     private List<BookingDto> GetRoomBookings(RoomDto room)
     {
         return room.Bookings.Where(bookings.ContainsKey).Select(bookingId => bookings[bookingId]).ToList();

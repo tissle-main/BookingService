@@ -1,12 +1,17 @@
 ﻿using ErrorOr;
 using Mediator;
 using BookingService.Data;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using BookingService.Data.Features.Rooms;
+using BookingService.Web.Features.SignalR;
 
 namespace BookingService.Web.Features.Rooms.Handlers.DeleteRooms;
 
-public sealed class DeleteRoomsHandler(AppDbContext thisDbContext) : ICommandHandler<DeleteRoomsCommand, ErrorOr<Unit>>
+public sealed class DeleteRoomsHandler(
+    AppDbContext thisDbContext,
+    IHubContext<SignalRHub, ISignalRClient> thisSignalR
+) : ICommandHandler<DeleteRoomsCommand, ErrorOr<Unit>>
 {
     #region Interfaces
     public async ValueTask<ErrorOr<Unit>> Handle(DeleteRoomsCommand command, CancellationToken cancellationToken)
@@ -27,6 +32,7 @@ public sealed class DeleteRoomsHandler(AppDbContext thisDbContext) : ICommandHan
         }
         thisDbContext.Rooms.RemoveRange(rooms);
         await thisDbContext.SaveChangesAsync(cancellationToken);
+        await thisSignalR.Clients.All.RoomsUpdated();
         return Unit.Value;
     }
     #endregion
