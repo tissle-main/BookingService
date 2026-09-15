@@ -2,7 +2,7 @@
 
 namespace BookingService.Web.Features.Auth.Handlers.RegisterUser;
 
-public static class LoginUserCommandFaker
+public static class RegisterUserCommandFaker
 {
     extension(Faker<RegisterUserCommand> thisFaker)
     {
