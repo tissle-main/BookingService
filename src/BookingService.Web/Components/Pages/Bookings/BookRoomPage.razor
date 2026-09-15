@@ -12,7 +12,7 @@
 @inject IMediator Mediator
 @inject HubConnection HubClient
 @inject ILogger<BookRoomPage> Logger
-@implements IAsyncDisposable
+@implements IDisposable
 
 <PageTitle>Book a Room</PageTitle>
 
@@ -149,11 +149,8 @@
                 async roomId => await base.InvokeAsync(
                     async () =>
                     {
-                        if (selectedRoomId == roomId)
-                        {
-                            await LoadRoomsAsync();
-                            StateHasChanged();
-                        }
+                        await LoadRoomsAsync();
+                        StateHasChanged();
                     }
                 )
             )
@@ -170,14 +167,9 @@
                 )
             )
         );
-        if(HubClient.State is HubConnectionState.Disconnected)
-        {           
-            await HubClient.StartAsync();
-        }
     }
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
-        await HubClient.StopAsync();
         foreach(IDisposable subscription in SignalRSubscriptions)
         {
             subscription.Dispose();

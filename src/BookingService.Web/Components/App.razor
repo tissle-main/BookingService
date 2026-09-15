@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@inject HubConnection SignalRHub
+
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8" />
@@ -17,3 +19,14 @@
         <script src="@Assets["_framework/blazor.web.js"]"></script>
     </body>
 </html>
+
+@code
+{
+    protected override async Task OnInitializedAsync()
+    {
+        if(SignalRHub.State is HubConnectionState.Disconnected)
+        {           
+            await SignalRHub.StartAsync();
+        }
+    }
+}
