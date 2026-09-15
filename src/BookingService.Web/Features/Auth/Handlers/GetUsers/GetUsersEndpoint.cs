@@ -1,6 +1,8 @@
 ﻿using ErrorOr;
 using Mediator;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using BookingService.Web.Shared.Extensions;
 using BookingService.Web.Features.Auth.Dtos.Users;
 using BookingService.Web.Shared.Behaviors.Authorized;
@@ -13,9 +15,17 @@ public static class GetUsersEndpoint
 
     public static string[] AllowedRoles
     {
-        get => AuthRoles.Any;
+        get => [AuthRoles.Admin];
     }
 
+    public static string CreateSendableUrl(Guid[] ids)
+    {
+        IEnumerable<KeyValuePair<string, string?>> queryParams = ids.Select(id =>
+        {
+            return new KeyValuePair<string, string?>(nameof(ids), id.ToString());
+        });
+        return QueryHelpers.AddQueryString(Url, queryParams);
+    }
     public static async Task<IResult> GetUsers(
         [FromQuery] Guid[]? ids,
         [FromServices] IMediator mediator,
@@ -43,6 +53,33 @@ public static class GetUsersEndpoint
             routeBuilder.WithName(nameof(GetUsers));
             routeBuilder.Produces<IEnumerable<UserDto>>(StatusCodes.Status200OK);
             routeBuilder.AddGetUsersProductionProblems();
+        }
+    }
+    extension(HttpClient thisHttpClient)
+    {
+        public async ValueTask<HttpResponseMessage> SendGetUsersAsync(Guid[] ids, CancellationToken cancellationToken)
+        {
+            return await thisHttpClient.GetAsync(CreateSendableUrl(ids), cancellationToken);
+        }
+        public async ValueTask<(HttpResponseMessage Message, UserDto[]? Response)> SendGetUsers2Async(
+            Guid[] ids,
+            CancellationToken cancellationToken
+        )
+        {
+            HttpResponseMessage message = await thisHttpClient.SendGetUsersAsync(ids, cancellationToken);
+            if(message.IsSuccessStatusCode)
+            {
+                try
+                {
+                    UserDto[]? response = await message.Content.ReadFromJsonAsync<UserDto[]>(cancellationToken);
+                    return (message, response);
+                }
+                catch(JsonException)
+                {
+                    return (message, null);
+                }
+            }
+            return (message, null);
         }
     }
 }

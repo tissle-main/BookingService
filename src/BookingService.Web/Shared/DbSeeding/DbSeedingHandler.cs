@@ -1,6 +1,6 @@
 ﻿using ErrorOr;
 using Mediator;
-using BookingService.Web.Features.Auth;
+using BookingService.Web.Features.Auth.Dtos;
 
 namespace BookingService.Web.Shared.DbSeeding;
 

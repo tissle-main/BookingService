@@ -1,8 +1,8 @@
 ﻿using ErrorOr;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
-using BookingService.Web.Features.Auth;
 using BookingService.Web.Shared.Extensions;
+using BookingService.Web.Features.Auth.Dtos;
 
 namespace BookingService.Web.Shared.DbSeeding;
 

@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Identity;
 using BookingService.Data.Features.Auth.Users;
 using BookingService.Data.Features.Auth.Roles;
 using BookingService.Web.Features.Auth.Options;
+using BookingService.Web.Features.Auth.Handlers.GetUser;
 using BookingService.Web.Features.Auth.Handlers.GetUsers;
 using BookingService.Web.Features.Auth.Handlers.LoginUser;
-using BookingService.Web.Features.Auth.Handlers.DeleteUser;
 using BookingService.Web.Features.Auth.Handlers.LogoutUser;
 using BookingService.Web.Features.Auth.Handlers.RegisterUser;
-using BookingService.Web.Features.Auth.Handlers.CheckLoggedInUser;
+using BookingService.Web.Features.Auth.Handlers.GetAdminCredentials;
 
 namespace BookingService.Web.Features.Auth;
 
@@ -38,10 +38,10 @@ public sealed class AuthFeatureProvider : FeatureProvider
 
         if(app.Environment.IsEnvironment(ProfileNames.Test))
         {
-            app.AddCheckLoggedInUserEndpoint();
-            app.AddRegisterUserEndpoint();
-            app.AddDeleteUserEndpoint();
+            app.AddGetUserEndpoint();
             app.AddGetUsersEndpoint();
+            app.AddGetAdminCredentialsEndpoint();
+            app.AddRegisterUserEndpoint();
         }
         app.AddLoginUserEndpoint();
         app.AddLogoutUserEndpoint();

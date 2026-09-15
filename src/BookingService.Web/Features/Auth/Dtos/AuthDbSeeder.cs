@@ -8,7 +8,7 @@ using BookingService.Data.Features.Auth.Users;
 using BookingService.Web.Features.Auth.Options;
 using BookingService.Web.Features.Auth.Dtos.Roles;
 
-namespace BookingService.Web.Features.Auth;
+namespace BookingService.Web.Features.Auth.Dtos;
 
 public static class AuthDbSeeder
 {

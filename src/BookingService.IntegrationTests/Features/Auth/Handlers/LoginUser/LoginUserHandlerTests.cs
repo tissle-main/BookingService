@@ -2,9 +2,10 @@
 using System.Net;
 using BookingService.Data.Features.Auth.Users;
 using BookingService.IntegrationTests.Seeders;
+using BookingService.Web.Features.Auth.Dtos.Users;
+using BookingService.Web.Features.Auth.Handlers.GetUser;
 using BookingService.Web.Features.Auth.Handlers.LoginUser;
 using BookingService.Web.Features.Auth.Handlers.RegisterUser;
-using BookingService.Web.Features.Auth.Handlers.CheckLoggedInUser;
 using BookingService.IntegrationTests.Features.Auth.Handlers.RegisterUser;
 
 namespace BookingService.IntegrationTests.Features.Auth.Handlers.LoginUser;
@@ -33,7 +34,6 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     }
 
     [Test]
-    [DependsOn(nameof(Handler_ShouldReturnUserWithRequestedEmail))]
     public async ValueTask Handler_ShouldLoginUser(CancellationToken cancellationToken)
     {
         //Arrange
@@ -50,9 +50,10 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
         await Assert.That(response).IsNotNull();
         message.Dispose();
 
-        (message, bool? sameUser) = await thisApp.HttpClient.SendCheckLoggedInUser2Async(response.User.Email, cancellationToken);
+        (message, UserDto? userDto) = await thisApp.HttpClient.SendGetUser2Async(cancellationToken);
         await Assert.That(message.StatusCode).IsEqualTo(HttpStatusCode.OK);
-        await Assert.That(sameUser).IsNotNull();
+        await Assert.That(userDto).IsNotNull();
+        await Assert.That(userDto).IsEquivalentTo(user.ToDto());
         message.Dispose();
     }
 

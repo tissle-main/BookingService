@@ -70,8 +70,10 @@ public static class UserSeeder
     {
         (UserEntity user, string password) = await app.AddUsers2AndPickRandomAsync(cancellationToken, min, max);
         LoginUserCommand login = new Faker<LoginUserCommand>().ValidInstance().WithEmail(user.Email!).WithPassword(password);
+
         using HttpResponseMessage response = await app.HttpClient.SendLoginUserAsync(login, cancellationToken);
         response.EnsureSuccessStatusCode();
+
         LoginUserResponse? result = await response.Content.ReadFromJsonAsync<LoginUserResponse>(cancellationToken);
         await Assert.That(result).IsNotNull();
         return (user, password);
