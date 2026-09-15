@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Arshid.Aspire.ApiDocs.Extensions;
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
+builder.AddAzureAppServiceEnvironment(AppHostResources.Environment);
 IResourceBuilder<AzureSqlServerResource> sqlserver = builder.AddAzureSqlServer(AppHostResources.SqlServer);
 IResourceBuilder<AzureSqlDatabaseResource> database = sqlserver.AddDatabase(AppHostResources.AppDatabase);
 IResourceBuilder<ProjectResource> web = builder.AddProject<Projects.BookingService_Web>(AppHostResources.Web);
@@ -21,5 +22,11 @@ if(signalr is not null)
 {
     web.WithReference(signalr).WaitFor(signalr);
 }
-web.WithReference(database).WaitFor(database).WithScalar(true).WithSwagger(true).WithOpenApi(true);
+web.WithExternalHttpEndpoints();
+web.WithReference(database).WaitFor(database);
+web.WithScalar(true).WithSwagger(true).WithOpenApi(true);
+web.PublishAsAzureAppServiceWebsite((infra, web) =>
+{
+
+});
 await builder.Build().RunAsync();

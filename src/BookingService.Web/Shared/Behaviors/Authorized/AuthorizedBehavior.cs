@@ -3,12 +3,14 @@ using Mediator;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using BookingService.Data.Features.Auth.Users;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace BookingService.Web.Shared.Behaviors.Authorized;
 
 public sealed class AuthorizedBehavior<TMessage, TErrorOrValue>(
     UserManager<UserEntity> thisUserManager,
-    IHttpContextAccessor thisHttpContextAccessor
+    IHttpContextAccessor thisHttpContextAccessor,
+    IServiceProvider thisServiceProvider
 ) : BehaviorBase<TMessage, TErrorOrValue>
     where TMessage : IAuthorizedBehaviorMessage
     where TErrorOrValue : IErrorOr
@@ -20,7 +22,25 @@ public sealed class AuthorizedBehavior<TMessage, TErrorOrValue>(
         CancellationToken cancellationToken
     )
     {
-        ClaimsPrincipal principal = thisHttpContextAccessor.HttpContext!.User;
+        ClaimsPrincipal? principal = null;
+        if(thisHttpContextAccessor.HttpContext is HttpContext context)
+        {
+            principal = context.User;
+        }
+        else if(thisServiceProvider.GetService<AuthenticationStateProvider>() is AuthenticationStateProvider authStateProvider)
+        {
+            AuthenticationState authState = await authStateProvider.GetAuthenticationStateAsync();
+            principal = authState.User;
+        }
+        
+        if(principal is null)
+        {
+            throw new NullReferenceException("Can`t get ClaimsPrincipal.");
+        }
+        if(!principal.Identity?.IsAuthenticated ?? true)
+        {
+            return FromErrors([Error.Unauthorized()]);
+        }
         if(await thisUserManager.GetUserAsync(principal) is not UserEntity user)
         {
             return FromErrors([Error.Unauthorized()]);

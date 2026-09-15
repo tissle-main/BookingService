@@ -13,6 +13,7 @@
 @using BookingService.Web.Features.Rooms.Handlers.UpdateRoom
 @inject IMediator Mediator
 @inject HubConnection HubClient
+@inject ILogger<RoomsPage> Logger
 @implements IAsyncDisposable
 
 <PageTitle>Rooms</PageTitle>
@@ -226,8 +227,9 @@
 
             bookings = bookingsResult.Value.ToDictionary(booking => booking.Id);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.LogError(exception, "Failed to load rooms.");
             errors.Add("The rooms could not be loaded. Please try again.");
         }
         finally

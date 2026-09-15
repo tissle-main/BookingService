@@ -14,12 +14,21 @@ public sealed class SignalRFeatureProvider : FeatureProvider
     #region Base
     public override void AddServices(WebApplicationBuilder builder)
     {
-        string baseUrl = builder.Configuration["ASPNETCORE_URLS"]?.Split(';')[0] ?? throw new NullReferenceException("Server urls not found");
-        Url = $"{baseUrl}{HubPath}";
+        if(builder.Environment.IsProduction())
+        {
+            string hostname = Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME") ?? throw new InvalidOperationException("WEBSITE_HOSTNAME not found");
+            string baseUrl = $"https://{hostname}";
+            Url = $"{baseUrl}{HubPath}";
+        }
+        else
+        {
+            string baseUrl = builder.Configuration["ASPNETCORE_URLS"]?.Split(';')[0] ?? throw new NullReferenceException("Server urls not found");
+            Url = $"{baseUrl}{HubPath}";
+        }
 
         if(builder.Environment.IsProduction())
         {
-            builder.Services.AddSignalR().AddAzureSignalR(AppHostResources.SignalR);
+            builder.Services.AddSignalR().AddNamedAzureSignalR(AppHostResources.SignalR);
         }
         else
         {

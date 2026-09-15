@@ -11,6 +11,7 @@
 @using BookingService.Web.Features.Rooms.Handlers.GetRooms
 @inject IMediator Mediator
 @inject HubConnection HubClient
+@inject ILogger<BookRoomPage> Logger
 @implements IAsyncDisposable
 
 <PageTitle>Book a Room</PageTitle>
@@ -203,8 +204,9 @@
 
             await LoadSelectedRoomScheduleAsync();
         }
-        catch (Exception)
+        catch(Exception exception)
         {
+            Logger.LogError(exception, "Failed to load rooms.");
             errors.Add("The rooms could not be loaded. Please try again.");
         }
         finally

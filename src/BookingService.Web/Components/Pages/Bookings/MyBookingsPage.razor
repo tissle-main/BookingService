@@ -12,6 +12,7 @@
 @attribute [Authorize]
 @inject IMediator Mediator
 @inject HubConnection HubClient
+@inject ILogger<MyBookingsPage> Logger
 @implements IAsyncDisposable
 
 <PageTitle>My Bookings</PageTitle>
@@ -231,8 +232,9 @@
 
             users = usersResult.Value.ToDictionary(user => user.Id);
         }
-        catch (Exception)
+        catch(Exception exception)
         {
+            Logger.LogError(exception, "Failed to load bookings.");
             errors.Add("Your bookings could not be loaded. Please try again.");
         }
         finally
