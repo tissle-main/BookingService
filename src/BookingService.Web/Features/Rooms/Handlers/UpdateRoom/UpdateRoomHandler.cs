@@ -9,6 +9,7 @@ using BookingService.Web.Features.Rooms.Dtos;
 
 namespace BookingService.Web.Features.Rooms.Handlers.UpdateRoom;
 
+/// <summary>Validates and persists room updates.</summary>
 public sealed class UpdateRoomHandler(
     AppDbContext thisDbContext,
     IHubContext<SignalRHub, ISignalRClient> thisSignalR

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 namespace Microsoft.Extensions.Hosting;
 #pragma warning restore IDE0130
 
+/// <summary>Provides extension methods for configuring host and web applications with service defaults.</summary>
 public static class Extensions
 {
     private const string HealthEndpointPath = "/health";

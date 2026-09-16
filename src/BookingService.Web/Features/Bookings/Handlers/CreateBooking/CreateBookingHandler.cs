@@ -11,6 +11,7 @@ using BookingService.Web.Shared.Behaviors.Authorized;
 
 namespace BookingService.Web.Features.Bookings.Handlers.CreateBooking;
 
+/// <summary>Validates and persists new room bookings.</summary>
 public sealed class CreateBookingHandler(
     AppDbContext thisDbContext,
     IHubContext<SignalRHub, ISignalRClient> signalr

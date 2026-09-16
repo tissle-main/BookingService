@@ -10,6 +10,7 @@ using BookingService.Web.Shared.Behaviors.Authorized;
 
 namespace BookingService.Web.Features.Rooms.Handlers.GetRooms;
 
+/// <summary>Defines the HTTP contract for retrieving rooms.</summary>
 public static class GetRoomsEndpoint
 {
     public const string Url = "/api/rooms";

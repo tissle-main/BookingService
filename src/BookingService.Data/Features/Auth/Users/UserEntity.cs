@@ -3,6 +3,7 @@ using BookingService.Data.Features.Bookings;
 
 namespace BookingService.Data.Features.Auth.Users;
 
+/// <summary>Represents an application user backed by ASP.NET Core Identity.</summary>
 public sealed class UserEntity : IdentityUser<Guid>
 {
     //Navigation properties

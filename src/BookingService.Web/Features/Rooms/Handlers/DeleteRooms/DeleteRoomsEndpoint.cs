@@ -8,6 +8,7 @@ using BookingService.Web.Shared.Behaviors.Authorized;
 
 namespace BookingService.Web.Features.Rooms.Handlers.DeleteRooms;
 
+/// <summary>Defines the HTTP contract for deleting rooms.</summary>
 public static class DeleteRoomsEndpoint
 {
     public const string Url = "/api/rooms";

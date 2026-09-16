@@ -2,6 +2,7 @@
 
 namespace BookingService.Web.Shared.DbSeeding;
 
+/// <summary>Registers database seeding services and its internal command endpoint.</summary>
 public sealed class DbSeedingFeatureProvider : FeatureProvider
 {
     #region Base

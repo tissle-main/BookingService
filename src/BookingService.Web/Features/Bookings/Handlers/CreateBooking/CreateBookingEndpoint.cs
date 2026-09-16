@@ -10,6 +10,7 @@ using BookingService.Web.Shared.Behaviors.Validation;
 
 namespace BookingService.Web.Features.Bookings.Handlers.CreateBooking;
 
+/// <summary>Defines the HTTP contract for creating bookings.</summary>
 public static class CreateBookingEndpoint
 {
     public const string Url = "/api/booking";

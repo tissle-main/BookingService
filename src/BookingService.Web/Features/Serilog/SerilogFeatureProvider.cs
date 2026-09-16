@@ -2,6 +2,7 @@
 
 namespace BookingService.Web.Features.Serilog;
 
+/// <summary>Configures Serilog integration for the web application.</summary>
 public sealed class SerilogFeatureProvider : FeatureProvider
 {
     #region Base

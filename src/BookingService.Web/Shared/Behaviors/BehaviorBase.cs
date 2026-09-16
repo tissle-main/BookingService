@@ -4,11 +4,13 @@ using System.Reflection;
 
 namespace BookingService.Web.Shared.Behaviors;
 
+/// <summary>Provides shared error conversion for Mediator pipeline behaviors.</summary>
 public abstract class BehaviorBase<TMessage, TErrorOrValue> : IPipelineBehavior<TMessage, TErrorOrValue>
     where TMessage : IMessage
     where TErrorOrValue : IErrorOr
 {
     #region Static
+    /// <summary>Gets the factory used to create the message's error-or result.</summary>
     protected static Func<List<Error>, TErrorOrValue> FromErrors { get; }
 
     static BehaviorBase()

@@ -6,6 +6,7 @@ using BookingService.Web.Shared.Behaviors.Validation;
 
 namespace BookingService.Web.Features.Auth.Handlers.RegisterUser;
 
+/// <summary>Defines the HTTP contract for registering users.</summary>
 public static class RegisterUserEndpoint
 {
     public const string Url = "/api/auth/register";

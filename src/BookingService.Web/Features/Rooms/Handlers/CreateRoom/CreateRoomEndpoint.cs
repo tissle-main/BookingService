@@ -10,6 +10,7 @@ using BookingService.Web.Shared.Behaviors.Validation;
 
 namespace BookingService.Web.Features.Rooms.Handlers.CreateRoom;
 
+/// <summary>Defines the HTTP contract for creating rooms.</summary>
 public static class CreateRoomEndpoint
 {
     public const string Url = "/api/room";

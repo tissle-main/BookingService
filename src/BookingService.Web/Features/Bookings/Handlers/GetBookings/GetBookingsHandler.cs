@@ -6,6 +6,7 @@ using BookingService.Web.Features.Bookings.Dtos;
 
 namespace BookingService.Web.Features.Bookings.Handlers.GetBookings;
 
+/// <summary>Retrieves booking projections from the database.</summary>
 public sealed class GetBookingsHandler(AppDbContext thisDbContext) : IQueryHandler<GetBookingsQuery, ErrorOr<IEnumerable<BookingDto>>>
 {
     #region Interfaces

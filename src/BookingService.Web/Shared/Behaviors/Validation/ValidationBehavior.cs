@@ -5,6 +5,7 @@ using FluentValidation.Results;
 
 namespace BookingService.Web.Shared.Behaviors.Validation;
 
+/// <summary>Validates Mediator messages before invoking their handlers.</summary>
 public sealed class ValidationBehavior<TMessage, TErrorOrValue>(IEnumerable<IValidator<TMessage>> thisValidators) : BehaviorBase<TMessage, TErrorOrValue>
     where TMessage : IMessage
     where TErrorOrValue : IErrorOr 

@@ -7,6 +7,7 @@ using LoginResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace BookingService.Web.Features.Auth.Handlers.LoginUser;
 
+/// <summary>Authenticates users and creates their Identity session.</summary>
 public sealed class LoginUserHandler(
     SignInManager<UserEntity> thisSignInManager
 ) : ICommandHandler<LoginUserCommand, ErrorOr<LoginUserResponse>>

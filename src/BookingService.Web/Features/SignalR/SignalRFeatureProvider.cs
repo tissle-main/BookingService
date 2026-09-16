@@ -3,11 +3,14 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace BookingService.Web.Features.SignalR;
 
+/// <summary>Registers and maps the application's SignalR infrastructure.</summary>
 public sealed class SignalRFeatureProvider : FeatureProvider
 {
     #region Static
+    /// <summary>Gets the route used by the SignalR hub.</summary>
     public const string HubPath = "/signalr";
 
+    /// <summary>Gets the absolute hub URL used by the server-side client connection.</summary>
     public static string Url { get; private set; } = "";
     #endregion
 

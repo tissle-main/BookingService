@@ -9,6 +9,7 @@ using BookingService.Web.Shared.Behaviors.Validation;
 
 namespace BookingService.Web.Features.Rooms.Handlers.UpdateRoom;
 
+/// <summary>Defines the HTTP contract for updating rooms.</summary>
 public static class UpdateRoomEndpoint
 {
     public const string Url = "/api/room";

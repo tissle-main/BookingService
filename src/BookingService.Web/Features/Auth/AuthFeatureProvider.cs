@@ -12,6 +12,7 @@ using BookingService.Web.Features.Auth.Handlers.GetAdminCredentials;
 
 namespace BookingService.Web.Features.Auth;
 
+/// <summary>Registers Identity, authentication, authorization, and authentication endpoints.</summary>
 public sealed class AuthFeatureProvider : FeatureProvider
 {
     public override void AddServices(WebApplicationBuilder builder)

@@ -9,6 +9,7 @@ using BookingService.Web.Features.Bookings.Dtos;
 
 namespace BookingService.Web.Features.Bookings.Handlers.GetBookings;
 
+/// <summary>Defines the HTTP contract for retrieving bookings.</summary>
 public static class GetBookingsEndpoint
 {
     public const string Url = "/api/bookings";

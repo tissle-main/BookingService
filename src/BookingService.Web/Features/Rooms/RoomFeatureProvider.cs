@@ -5,6 +5,7 @@ using BookingService.Web.Features.Rooms.Handlers.DeleteRooms;
 
 namespace BookingService.Web.Features.Rooms;
 
+/// <summary>Registers room services and endpoints.</summary>
 public sealed class RoomFeatureProvider : FeatureProvider
 {
     #region Base

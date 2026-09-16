@@ -9,6 +9,7 @@ using BookingService.Web.Features.Rooms.Dtos;
 
 namespace BookingService.Web.Features.Rooms.Handlers.CreateRoom;
 
+/// <summary>Validates and persists new rooms.</summary>
 public sealed class CreateRoomHandler(
     AppDbContext thisDbContext,
     IHubContext<SignalRHub, ISignalRClient> thisSignalR

@@ -3,6 +3,7 @@ using BookingService.Web.Features.Bookings.Handlers.CreateBooking;
 
 namespace BookingService.Web.Features.Bookings;
 
+/// <summary>Registers booking services and endpoints.</summary>
 public sealed class BookingFeatureProvider : FeatureProvider
 {
     #region Base

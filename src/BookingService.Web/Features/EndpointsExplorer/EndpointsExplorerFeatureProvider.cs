@@ -2,6 +2,7 @@
 
 namespace BookingService.Web.Features.EndpointsExplorer;
 
+/// <summary>Registers OpenAPI endpoint exploration support.</summary>
 public sealed class EndpointsExplorerFeatureProvider : FeatureProvider
 {
     #region Base

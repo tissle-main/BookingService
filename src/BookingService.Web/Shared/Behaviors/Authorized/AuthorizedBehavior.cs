@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 
 namespace BookingService.Web.Shared.Behaviors.Authorized;
 
+/// <summary>Verifies that user is authenticated, has an allowed role, and retrieves <see cref="UserEntity"/> from database.</summary>
 public sealed class AuthorizedBehavior<TMessage, TErrorOrValue>(
     UserManager<UserEntity> thisUserManager,
     IHttpContextAccessor thisHttpContextAccessor,

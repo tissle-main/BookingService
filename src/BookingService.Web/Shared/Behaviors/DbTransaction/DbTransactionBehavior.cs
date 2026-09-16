@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BookingService.Web.Shared.Behaviors.DbTransaction;
 
+/// <summary>Executes transactional Mediator messages using an EF Core execution strategy.</summary>
 public sealed class DbTransactionBehavior<TMessage, TErrorOrValue>(AppDbContext thisDbContext) : IPipelineBehavior<TMessage, TErrorOrValue>
     where TMessage : IDbTransactionBehaviorMessage
     where TErrorOrValue : IErrorOr

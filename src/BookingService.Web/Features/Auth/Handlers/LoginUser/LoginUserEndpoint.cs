@@ -6,6 +6,7 @@ using BookingService.Web.Shared.Behaviors.Validation;
 
 namespace BookingService.Web.Features.Auth.Handlers.LoginUser;
 
+/// <summary>Defines the HTTP contract for logging users in.</summary>
 public static class LoginUserEndpoint
 {
     public const string Url = "/api/auth/login";

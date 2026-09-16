@@ -14,6 +14,7 @@ using BookingService.Web.Shared.Behaviors.DbTransaction;
 
 namespace BookingService.Web;
 
+/// <summary>Composes the web application's services and middleware.</summary>
 public static class DIContainer
 {
     private static FrozenSet<FeatureProvider> Features { get; set; } = [];

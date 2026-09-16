@@ -8,6 +8,7 @@ using BookingService.Web.Features.SignalR;
 
 namespace BookingService.Web.Features.Rooms.Handlers.DeleteRooms;
 
+/// <summary>Deletes rooms and their associated data.</summary>
 public sealed class DeleteRoomsHandler(
     AppDbContext thisDbContext,
     IHubContext<SignalRHub, ISignalRClient> thisSignalR

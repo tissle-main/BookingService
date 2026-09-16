@@ -5,6 +5,7 @@ using BookingService.Data.Features.Auth.Users;
 
 namespace BookingService.Web.Features.Auth.Handlers.RegisterUser;
 
+/// <summary>Creates users through ASP.NET Core Identity.</summary>
 public sealed class RegisterUserHandler(UserManager<UserEntity> thisUserManager) : ICommandHandler<RegisterUserCommand, ErrorOr<Unit>>
 {
     #region Interfaces
