@@ -15,7 +15,7 @@ public sealed class LogoutUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldLogoutUser(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
 

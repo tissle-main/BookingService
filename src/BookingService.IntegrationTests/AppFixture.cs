@@ -21,6 +21,7 @@ public sealed class AppFixture : AspireFixture<BookingService_AppHost>
     private string ConnectionString { get; set; } = null!; //Init after InitializedAsync
     private DbContextOptions<AppDbContext> DbOptions { get; set; } = null!; //Init after InitializedAsync
     private Respawner Respawner { get; set; } = null!; //Init after InitializedAsync
+    private Uri? WebBaseAddress { get; set; }
     public HttpClient HttpClient { get; private set; } = null!; //Init after InitializedAsync
 
     public async ValueTask ExecuteDbContextAsync(Func<AppDbContext, ValueTask> func)
@@ -33,8 +34,14 @@ public sealed class AppFixture : AspireFixture<BookingService_AppHost>
         await using AppDbContext context = new(DbOptions);
         return await func(context);
     }
-    public async ValueTask ResetDatabaseAsync(CancellationToken cancellationToken)
+    public async ValueTask ResetAsync(CancellationToken cancellationToken)
     {
+        HttpClient?.Dispose();
+        HttpClient = new HttpClient()
+        {
+            BaseAddress = WebBaseAddress
+        };
+
         await using SqlConnection connection = new(ConnectionString);
         await connection.OpenAsync(cancellationToken);
         await Respawner.ResetAsync(connection);
@@ -77,7 +84,12 @@ public sealed class AppFixture : AspireFixture<BookingService_AppHost>
         Environment.SetEnvironmentVariable("DOTNET_LAUNCH_PROFILE", ProfileNames.Test);
         await base.InitializeAsync();
 
-        HttpClient = base.CreateHttpClient(AppHostResources.Web);
+        WebBaseAddress = base.CreateHttpClient(AppHostResources.Web).BaseAddress;
+        HttpClient = new HttpClient()
+        {
+            BaseAddress = WebBaseAddress
+        };
+
         ConnectionString = await base.GetConnectionStringAsync(AppHostResources.AppDatabase) ?? throw new NullReferenceException("ConnectionString is null");
         DbOptions = new DbContextOptionsBuilder<AppDbContext>().UseSqlServer(ConnectionString).Options;
         await ExecuteDbContextAsync(async db =>
@@ -95,7 +107,7 @@ public sealed class AppFixture : AspireFixture<BookingService_AppHost>
     }
     public override async ValueTask DisposeAsync()
     {
-        await ResetDatabaseAsync(base.RunCancellationToken);
+        await ResetAsync(base.RunCancellationToken);
         await base.DisposeAsync();
     }
     #endregion

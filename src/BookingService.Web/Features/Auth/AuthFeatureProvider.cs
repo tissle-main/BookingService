@@ -28,6 +28,27 @@ public sealed class AuthFeatureProvider : FeatureProvider
             options.LoginPath = "/Auth/Login";
             options.AccessDeniedPath = "/Auth/Login";
             options.SlidingExpiration = true;
+
+            options.Events.OnRedirectToLogin = context =>
+            {
+                if(context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                }
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
+            options.Events.OnRedirectToAccessDenied = context =>
+            {
+                if(context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    return Task.CompletedTask;
+                }
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
         });
         builder.Services.AddAuthorization();
     }

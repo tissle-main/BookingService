@@ -18,7 +18,7 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldReturnUserWithRequestedEmail(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         (UserEntity user, string password) = await thisApp.AddUsers2AndPickRandomAsync(cancellationToken);
         LoginUserCommand command = new(user.Email!, password);
@@ -37,7 +37,7 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldLoginUser(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         (UserEntity user, string password) = await thisApp.AddUsers2AndPickRandomAsync(cancellationToken);
         LoginUserCommand command = new(user.Email!, password);
@@ -61,7 +61,7 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenUserNotFound(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         (_, string password) = await thisApp.AddUsers2AndPickRandomAsync(cancellationToken);
         LoginUserCommand command = new Faker<LoginUserCommand>().ValidInstance().WithPassword(password);
@@ -77,7 +77,7 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenPasswordIsInvalid(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         (UserEntity user, _) = await thisApp.AddUsers2AndPickRandomAsync(cancellationToken);
         LoginUserCommand command = new Faker<LoginUserCommand>().ValidInstance().WithEmail(user.Email!);
@@ -93,7 +93,7 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenEmailIsInvalid(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         LoginUserCommand command = new Faker<LoginUserCommand>().ValidInstance().WithInvalidEmail().Generate();
 
         //Act
@@ -107,7 +107,7 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenPasswordTooShord(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         LoginUserCommand command = new Faker<LoginUserCommand>().ValidInstance().WithTooShortPassword().Generate();
 
         //Act
@@ -121,7 +121,7 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenPasswordDoNotContainUppercaseLetters(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         LoginUserCommand command = new Faker<LoginUserCommand>().ValidInstance().WithPasswordWithoutUppercaseLetters().Generate();
 
         //Act
@@ -135,7 +135,7 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenPasswordDoNotContainLowercaseLetters(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         LoginUserCommand command = new Faker<LoginUserCommand>().ValidInstance().WithPasswordWithoutLowercaseLetters().Generate();
 
         //Act
@@ -149,7 +149,7 @@ public sealed class LoginUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenPasswordDoNotContainDigits(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         LoginUserCommand command = new Faker<LoginUserCommand>().ValidInstance().WithPasswordWithoutDigits().Generate();
 
         //Act

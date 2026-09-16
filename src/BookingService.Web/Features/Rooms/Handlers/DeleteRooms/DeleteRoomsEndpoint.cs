@@ -2,6 +2,7 @@
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using BookingService.Web.Features.Auth;
+using Microsoft.AspNetCore.WebUtilities;
 using BookingService.Web.Shared.Extensions;
 using BookingService.Web.Shared.Behaviors.Authorized;
 
@@ -13,6 +14,14 @@ public static class DeleteRoomsEndpoint
 
     public static string[] AllowedRoles { get; } = [AuthRoles.Admin];
 
+    public static string CreateSendableUrl(Guid[] ids)
+    {
+        IEnumerable<KeyValuePair<string, string?>> queryParams = ids.Select(id =>
+        {
+            return new KeyValuePair<string, string?>(nameof(ids), id.ToString());
+        });
+        return QueryHelpers.AddQueryString(Url, queryParams);
+    }
     public static async Task<IResult> DeleteRooms(
         [FromQuery] Guid[]? ids,
         [FromServices] IMediator mediator,
@@ -40,6 +49,13 @@ public static class DeleteRoomsEndpoint
             routeBuilder.WithName(nameof(DeleteRooms));
             routeBuilder.Produces(StatusCodes.Status204NoContent);
             routeBuilder.AddDeleteRoomsProductionProblems();
+        }
+    }
+    extension(HttpClient thisHttpClient)
+    {
+        public async ValueTask<HttpResponseMessage> SendDeleteRoomsAsync(Guid[] ids, CancellationToken cancellationToken)
+        {
+            return await thisHttpClient.DeleteAsync(CreateSendableUrl(ids), cancellationToken);
         }
     }
 }

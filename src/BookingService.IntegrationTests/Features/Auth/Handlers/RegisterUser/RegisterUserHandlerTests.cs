@@ -16,7 +16,7 @@ public sealed class RegisterUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldCreateUser(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         await thisApp.ExecuteDbContextAsync(async db =>
         {
@@ -42,7 +42,7 @@ public sealed class RegisterUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldSetUserRole(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         await thisApp.ExecuteDbContextAsync(async db =>
         {
@@ -73,7 +73,7 @@ public sealed class RegisterUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenUserExists(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         RegisterUserCommand command = await thisApp.AddUsersAndPickRandomAsync(cancellationToken);
 
@@ -88,7 +88,7 @@ public sealed class RegisterUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenEmailIsInvalid(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         RegisterUserCommand command = new Faker<RegisterUserCommand>().ValidInstance().WithInvalidEmail().Generate();
 
         //Act
@@ -102,7 +102,7 @@ public sealed class RegisterUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenPasswordTooShord(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         RegisterUserCommand command = new Faker<RegisterUserCommand>().ValidInstance().WithTooShortPassword().Generate();
 
         //Act
@@ -116,7 +116,7 @@ public sealed class RegisterUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenPasswordDoNotContainUppercaseLetters(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         RegisterUserCommand command = new Faker<RegisterUserCommand>().ValidInstance().WithPasswordWithoutUppercaseLetters().Generate();
 
         //Act
@@ -130,7 +130,7 @@ public sealed class RegisterUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenPasswordDoNotContainLowercaseLetters(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         RegisterUserCommand command = new Faker<RegisterUserCommand>().ValidInstance().WithPasswordWithoutLowercaseLetters().Generate();
 
         //Act
@@ -144,7 +144,7 @@ public sealed class RegisterUserHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenPasswordDoNotContainDigits(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         RegisterUserCommand command = new Faker<RegisterUserCommand>().ValidInstance().WithPasswordWithoutDigits().Generate();
 
         //Act

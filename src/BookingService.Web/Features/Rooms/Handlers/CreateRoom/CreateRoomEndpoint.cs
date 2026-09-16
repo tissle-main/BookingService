@@ -1,5 +1,6 @@
 ﻿using ErrorOr;
 using Mediator;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using BookingService.Web.Features.Auth;
 using BookingService.Web.Shared.Extensions;
@@ -43,6 +44,33 @@ public static class CreateRoomEndpoint
             routeBuilder.WithName(nameof(CreateRoom));
             routeBuilder.Produces<Guid>(StatusCodes.Status200OK);
             routeBuilder.AddCreateRoomProductionProblems();
+        }
+    }
+    extension(HttpClient thisHttpClient)
+    {
+        public async ValueTask<HttpResponseMessage> SendCreateRoomAsync(CreateRoomCommand command, CancellationToken cancellationToken)
+        {
+            return await thisHttpClient.PostAsJsonAsync(Url, command.Room, cancellationToken);
+        }
+        public async ValueTask<(HttpResponseMessage Message, Guid? Response)> SendCreateRoom2Async(
+            CreateRoomCommand command,
+            CancellationToken cancellationToken
+        )
+        {
+            HttpResponseMessage message = await thisHttpClient.SendCreateRoomAsync(command, cancellationToken);
+            if(message.IsSuccessStatusCode)
+            {
+                try
+                {
+                    Guid? response = await message.Content.ReadFromJsonAsync<Guid?>(cancellationToken);
+                    return (message, response);
+                }
+                catch(JsonException)
+                {
+                    return (message, null);
+                }
+            }
+            return (message, null);
         }
     }
 }

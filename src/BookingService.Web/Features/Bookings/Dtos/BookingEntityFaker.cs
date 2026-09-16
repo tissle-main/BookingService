@@ -22,6 +22,21 @@ public static class BookingEntityFaker
                 };
             });
         }
+        public Faker<BookingEntity> WithBookingStart(DateTime bookingStart)
+        {
+            return thisFaker.RuleFor(e => e.BookingStart, bookingStart).RuleFor(e => e.BookingEnd, g =>
+            {
+                return g.Date.Soon(refDate: bookingStart.AddDays(1));
+            });
+        }
+        public Faker<BookingEntity> WithUserId(Guid userId)
+        {
+            return thisFaker.RuleFor(e => e.UserId, userId);
+        }
+        public Faker<BookingEntity> WithRoomId(Guid roomId)
+        {
+            return thisFaker.RuleFor(e => e.RoomId, roomId);
+        }
         public Faker<BookingEntity> WithZeroBookingDuration()
         {
             DateTime dateTime = Faker.Date.Soon();

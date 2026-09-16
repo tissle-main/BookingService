@@ -18,17 +18,17 @@ public sealed class UpdateRoomHandler(
     public async ValueTask<ErrorOr<Unit>> Handle(UpdateRoomCommand command, CancellationToken cancellationToken)
     {
         RoomEntity room = command.Room.ToEntity();
-        if(await thisDbContext.Rooms.AnyAsync(e => e.Name == room.Name, cancellationToken))
-        {
-            return RoomErrors.Conflict(room.Name);
-        }
-
         RoomEntity? oldRoom = await thisDbContext.Rooms.FirstOrDefaultAsync(e => e.Id == room.Id, cancellationToken);
         if(oldRoom is null)
         {
             return RoomErrors.NotFound([room.Id]);
         }
+        if(room.Name != oldRoom.Name && await thisDbContext.Rooms.AnyAsync(e => e.Name == room.Name, cancellationToken))
+        {
+            return RoomErrors.Conflict(room.Name);
+        }
 
+        room.CreatedAt = oldRoom.CreatedAt;
         room.MapToEntity(oldRoom);
         await thisDbContext.SaveChangesAsync(cancellationToken);
         await thisSignalR.Clients.All.RoomsUpdated();

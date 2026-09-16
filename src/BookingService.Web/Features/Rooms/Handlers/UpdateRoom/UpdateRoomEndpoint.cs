@@ -46,4 +46,11 @@ public static class UpdateRoomEndpoint
             routeBuilder.AddUpdateRoomProductionProblems();
         }
     }
+    extension(HttpClient thisHttpClient)
+    {
+        public async ValueTask<HttpResponseMessage> SendUpdateRoomAsync(UpdateRoomCommand command, CancellationToken cancellationToken)
+        {
+            return await thisHttpClient.PutAsJsonAsync(Url, command.Room, cancellationToken);
+        }
+    }
 }

@@ -18,7 +18,7 @@ public sealed class GetUsersHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldReturnAllUsers_WhenNoIdsProvided(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         UserDto user = await thisApp.LoginAsAdminAsync(cancellationToken);
         IEnumerable<(UserEntity User, string Password)> users = await thisApp.AddUsers2Async(cancellationToken);
@@ -36,7 +36,7 @@ public sealed class GetUsersHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldReturnConcreteUsers_WhenIdsProvided(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         await thisApp.LoginAsAdminAsync(cancellationToken);
         IEnumerable<(UserEntity User, string Password)> users = await thisApp.AddUsers2Async(cancellationToken);
@@ -57,7 +57,7 @@ public sealed class GetUsersHandlerTests(AppFixture thisApp)
     public async ValueTask Handler_ShouldFail_WhenIdsNotFound(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         await thisApp.LoginAsAdminAsync(cancellationToken);
         IEnumerable<(UserEntity User, string Password)> users = await thisApp.AddUsers2Async(cancellationToken);
@@ -73,22 +73,31 @@ public sealed class GetUsersHandlerTests(AppFixture thisApp)
     }
 
     [Test]
-    public async ValueTask Handler_ShouldForbid_WhenLoginAsNotAdmin(CancellationToken cancellationToken)
+    public async ValueTask Handler_ShouldForbid_WhenLoginnedAsNotAdmin(CancellationToken cancellationToken)
     {
         //Arrange
-        await thisApp.ResetDatabaseAsync(cancellationToken);
+        await thisApp.ResetAsync(cancellationToken);
         await thisApp.SeedDatabaseAsync(cancellationToken);
         await thisApp.AddUsers2AndLoginRandomAsync(cancellationToken);
 
         //Act
-        (HttpResponseMessage message, UserDto[]? users) = await thisApp.HttpClient.SendGetUsers2Async([], cancellationToken);
+        using HttpResponseMessage message = await thisApp.HttpClient.SendGetUsersAsync([], cancellationToken);
 
         //Assert
-        await Assert.That(message.StatusCode).IsEqualTo(HttpStatusCode.Forbidden).Or.IsEqualTo(HttpStatusCode.OK);
-        await Assert.That(users).IsNull().Because(
-            $"if '{nameof(message.StatusCode)}' is '{HttpStatusCode.OK}', " +
-            $"then user was redirected to the login page, " +
-            $"and we do not expect '{nameof(users)}' to be parsed."
-        );
+        await Assert.That(message.StatusCode).IsEqualTo(HttpStatusCode.Forbidden);
+    }
+
+    [Test]
+    public async ValueTask Handler_ShouldFail_WhenUnauthorized(CancellationToken cancellationToken)
+    {
+        //Arrange
+        await thisApp.ResetAsync(cancellationToken);
+        await thisApp.SeedDatabaseAsync(cancellationToken);
+
+        //Act
+        using HttpResponseMessage message = await thisApp.HttpClient.SendGetUsersAsync([], cancellationToken);
+
+        //Assert
+        await Assert.That(message.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
     }
 }
